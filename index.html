@@ -5,8 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>NCERT Library · Every book, Class 1–12</title>
 <meta name="description" content="Every NCERT textbook for Classes 1–12, with chapter PDFs and independent solutions, sorted by class and syllabus.">
-<meta name="theme-color" content="#f3f5f7" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#14161c" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#f6f7fb" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0d1017" media="(prefers-color-scheme: dark)">
+<link rel="preload" href="fonts/jakarta-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -15,7 +16,7 @@
 <header class="top">
   <div class="wrap top-inner">
     <a class="brand" href="#/">
-      <span class="brand-mark">N</span>
+      <span class="brand-mark" data-icon="book"></span>
       <span class="brand-text"><strong>NCERT Library</strong><small>Class 1–12 · direct PDFs</small></span>
     </a>
     <form class="search" id="searchForm" role="search">
@@ -34,11 +35,11 @@
 </header>
 
 <nav class="bottom-nav" aria-label="Sections">
-  <a href="#/" data-route="home"><span class="bn-icon" aria-hidden="true">⌂</span>Home</a>
-  <a href="#/books" data-route="books"><span class="bn-icon" aria-hidden="true">B</span>Books</a>
-  <a href="#/solutions" data-route="solutions"><span class="bn-icon" aria-hidden="true">S</span>Solutions</a>
-  <a href="#/exemplar" data-route="exemplar"><span class="bn-icon" aria-hidden="true">E</span>Exemplar</a>
-  <a href="#/upsc" data-route="upsc"><span class="bn-icon" aria-hidden="true">U</span>UPSC</a>
+  <a href="#/" data-route="home"><span class="bn-icon" data-icon="home" aria-hidden="true"></span>Home</a>
+  <a href="#/books" data-route="books"><span class="bn-icon" data-icon="book" aria-hidden="true"></span>Books</a>
+  <a href="#/solutions" data-route="solutions"><span class="bn-icon" data-icon="bulb" aria-hidden="true"></span>Solutions</a>
+  <a href="#/exemplar" data-route="exemplar"><span class="bn-icon" data-icon="clipboard" aria-hidden="true"></span>Exemplar</a>
+  <a href="#/upsc" data-route="upsc"><span class="bn-icon" data-icon="landmark" aria-hidden="true"></span>UPSC</a>
 </nav>
 
 <main id="app" class="wrap" tabindex="-1"></main>
