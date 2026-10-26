@@ -66,14 +66,14 @@
   var NO_NEP_YET = [10, 11, 12];
 
   var UPSC_PATH = [
-    { lang: "English", t: "Ancient India", d: "Start with Romila Thapar's middle-school book, then R.S. Sharma.", ids: ["classic-7", "classic-1"] },
-    { lang: "English", t: "Medieval India", d: "The old Class 7 book, then Satish Chandra.", ids: ["classic-8", "classic-2"] },
-    { lang: "English", t: "Modern India", d: "Bipan Chandra's Modern India.", ids: ["classic-3"] },
-    { lang: "English", t: "The 2002 series", d: "Short-lived replacements, still read for a second view.", ids: ["classic-9", "classic-10", "classic-11"] },
-    { lang: "English", t: "Also on the shelf", d: "", ids: ["classic-12"] },
-    { lang: "Hindi", t: "प्राचीन भारत", d: "Ancient India, Class 11.", ids: ["classic-4"] },
-    { lang: "Hindi", t: "मध्यकालीन भारत", d: "Medieval India by Satish Chandra.", ids: ["classic-5"] },
-    { lang: "Hindi", t: "आधुनिक भारत", d: "Modern India by Bipan Chandra.", ids: ["classic-6"] }
+    { lang: "English", k: "Ancient", c: "#d97706", t: "Ancient India", d: "Start with Romila Thapar's middle-school book, then R.S. Sharma.", ids: ["classic-7", "classic-1"] },
+    { lang: "English", k: "Medieval", c: "#0d9488", t: "Medieval India", d: "The old Class 7 book, then Satish Chandra.", ids: ["classic-8", "classic-2"] },
+    { lang: "English", k: "Modern", c: "#4f46e5", t: "Modern India", d: "Bipan Chandra's Modern India.", ids: ["classic-3"] },
+    { lang: "English", k: "2002 series", c: "#7c3aed", t: "The 2002 series", d: "Short-lived replacements, still read for a second view.", ids: ["classic-9", "classic-10", "classic-11"] },
+    { lang: "English", k: "More", c: "#db2777", t: "Also on the shelf", d: "Other out-of-print NCERT books.", ids: ["classic-12"] },
+    { lang: "Hindi", k: "प्राचीन", c: "#d97706", t: "प्राचीन भारत", d: "Ancient India, Class 11.", ids: ["classic-4"] },
+    { lang: "Hindi", k: "मध्यकालीन", c: "#0d9488", t: "मध्यकालीन भारत", d: "Medieval India by Satish Chandra.", ids: ["classic-5"] },
+    { lang: "Hindi", k: "आधुनिक", c: "#4f46e5", t: "आधुनिक भारत", d: "Modern India by Bipan Chandra.", ids: ["classic-6"] }
   ];
 
 
@@ -831,27 +831,81 @@
     app.appendChild(src);
   }
 
-  function upscBook(b) {
-    var card = el("div", "ubook");
-    var main = internal(bookHref(b), "ubook-main");
-    var cover = el("span", "ubook-cover");
-    cover.appendChild(icon("scroll"));
-    main.appendChild(cover);
-    var text = el("span", "ubook-text");
-    text.appendChild(el("strong", null, b.t));
-    if (b.by) text.appendChild(el("span", "ubook-by", b.by));
-    text.appendChild(el("span", "ubook-sub", "Class " + b.c + " · " + (b.full ? "Full book PDF" : plural(countable(b), "chapter"))));
-    main.appendChild(text);
-    card.appendChild(main);
+  function upscAuthor(b) {
+    var by = String(b.by || "");
+    var year = (by.match(/\b(1[89]\d\d|20\d\d)\b/) || [])[1] || "";
+    var parts = by.replace(/\s*\(?\b(1[89]\d\d|20\d\d)\b\)?/, "").split(",");
+    var extra = parts.slice(1).join(",").replace(/^\s*Hindi\s*$/i, "").trim();
+    return { name: parts[0].trim() || b.t, extra: extra, year: year };
+  }
+  function upscBooks(step) {
+    return step.ids.map(function (id) { return BY_ID[id]; }).filter(Boolean);
+  }
+  function upscRead(b, cls) {
     var href = b.full || (b.ch[0] && b.ch[0][1]);
-    if (href) {
-      var read = ext(href, "pill-btn ubook-read");
-      read.appendChild(icon("file"));
-      read.appendChild(document.createTextNode("Read"));
-      read.setAttribute("aria-label", "Read " + b.t + (b.by ? " by " + b.by : ""));
-      card.appendChild(read);
+    if (!href) return null;
+    var read = ext(href, "pill-btn " + (cls || ""));
+    read.appendChild(icon("file"));
+    read.appendChild(document.createTextNode("Read"));
+    read.setAttribute("aria-label", "Read " + b.t + (b.by ? " by " + b.by : ""));
+    return read;
+  }
+  function upscCover(b, step) {
+    var by = upscAuthor(b);
+    var a = internal(bookHref(b), "ucover");
+    a.style.setProperty("--c", step.c);
+    var face = el("span", "ucover-face");
+    face.appendChild(el("span", "ucover-era", b.t));
+    face.appendChild(el("strong", null, by.name));
+    if (by.year) face.appendChild(el("span", "ucover-year", by.year));
+    face.appendChild(icon("scroll", "ucover-ic"));
+    a.appendChild(face);
+    a.appendChild(el("span", "ucover-sub", "Class " + b.c + (by.extra ? " · " + by.extra : "")));
+    return a;
+  }
+
+  function upscEras(box, steps) {
+    var pick = Math.min(load("ncert-upsc-era", 0), steps.length - 1);
+    var tabs = el("div", "uera-tabs");
+    tabs.setAttribute("role", "group");
+    tabs.setAttribute("aria-label", "Era");
+    var panel = el("div", "uera-panel");
+    function show() {
+      panel.textContent = "";
+      var step = steps[pick];
+      panel.style.setProperty("--c", step.c);
+      panel.appendChild(el("h2", "uera-t", step.t));
+      if (step.d) panel.appendChild(el("p", "uera-d", step.d));
+      var grid = el("div", "ucovers");
+      upscBooks(step).forEach(function (b) {
+        var cell = el("div", "ucell");
+        cell.appendChild(upscCover(b, step));
+        var r = upscRead(b, "ucell-read");
+        if (r) cell.appendChild(r);
+        grid.appendChild(cell);
+      });
+      panel.appendChild(grid);
     }
-    return card;
+    steps.forEach(function (step, i) {
+      var t = el("button", "uera-tab");
+      t.type = "button";
+      t.style.setProperty("--c", step.c);
+      t.appendChild(el("span", "n", String(i + 1)));
+      t.appendChild(document.createTextNode(step.k));
+      t.setAttribute("aria-pressed", String(i === pick));
+      t.addEventListener("click", function () {
+        pick = i;
+        save("ncert-upsc-era", i);
+        [].forEach.call(tabs.children, function (x) { x.setAttribute("aria-pressed", String(x === t)); });
+        tabs.scrollTo({ left: t.offsetLeft - tabs.offsetLeft - 14, behavior: "smooth" });
+        show();
+      });
+      tabs.appendChild(t);
+    });
+    box.appendChild(tabs);
+    box.appendChild(panel);
+    if (pick > 0) tabs.scrollLeft = tabs.children[pick].offsetLeft - tabs.offsetLeft - 14;
+    show();
   }
 
   function viewUpsc() {
@@ -859,56 +913,46 @@
     var lang = load("ncert-upsc-lang", "English");
     app.appendChild(backLink("#/", "Home"));
 
-    var hero = el("section", "upsc-hero");
-    var mark = icon("landmark", "section-mark");
-    mark.style.setProperty("--c", sectionOf("upsc").color);
-    hero.appendChild(mark);
-    var ht = el("div");
-    ht.appendChild(el("h1", null, "UPSC shelf"));
-    ht.appendChild(el("p", "lead", "Out-of-print NCERT history books aspirants still read, in the order they are usually read."));
-    var chips = el("div", "book-meta");
-    chips.appendChild(chip(plural(UPSC.length, "book")));
-    chips.appendChild(chip("English & Hindi"));
-    chips.appendChild(chip("Full book PDFs"));
-    ht.appendChild(chips);
-    hero.appendChild(ht);
-    app.appendChild(hero);
-
-    var seg = el("div", "seg");
+    var hero = el("section", "uhero");
+    hero.style.setProperty("--c", sectionOf("upsc").color);
+    hero.appendChild(icon("landmark", "uhero-bg"));
+    hero.appendChild(el("span", "uhero-kicker", "UPSC shelf"));
+    hero.appendChild(el("h1", null, "Old NCERT history"));
+    hero.appendChild(el("p", null, "Out-of-print books aspirants still read, in the order they are usually read."));
+    var seg = el("div", "uhero-seg");
     seg.setAttribute("role", "group");
     seg.setAttribute("aria-label", "Language");
-    var path = el("ol", "upath");
+    hero.appendChild(seg);
+    app.appendChild(hero);
+
+    var body = el("div", "ubody");
+    app.appendChild(body);
     function draw() {
-      path.textContent = "";
-      UPSC_PATH.filter(function (s) { return s.lang === lang; }).forEach(function (step, i) {
-        var li = el("li", "ustep");
-        li.appendChild(el("span", "ustep-num", String(i + 1)));
-        var body = el("div", "ustep-body");
-        body.appendChild(el("h2", null, step.t));
-        if (step.d) body.appendChild(el("p", "ustep-d", step.d));
-        var box = el("div", "ubooks");
-        step.ids.forEach(function (id) { if (BY_ID[id]) box.appendChild(upscBook(BY_ID[id])); });
-        body.appendChild(box);
-        li.appendChild(body);
-        path.appendChild(li);
-      });
+      body.textContent = "";
+      var steps = UPSC_PATH.filter(function (s) { return s.lang === lang; });
+      upscEras(body, steps);
     }
     [["English", "English"], ["Hindi", "हिंदी"]].forEach(function (l) {
+      var n = UPSC.filter(function (b) { return b.m === l[0]; }).length;
       var b = el("button", null, l[1]);
       b.type = "button";
+      b.appendChild(el("small", null, String(n)));
       b.setAttribute("aria-pressed", String(lang === l[0]));
       b.addEventListener("click", function () {
         lang = l[0];
         save("ncert-upsc-lang", lang);
+        save("ncert-upsc-era", 0);
         [].forEach.call(seg.children, function (x) { x.setAttribute("aria-pressed", String(x === b)); });
         draw();
       });
       seg.appendChild(b);
     });
-    app.appendChild(seg);
-    app.appendChild(path);
     draw();
 
+    upscOld();
+  }
+
+  function upscOld() {
     var old = el("section", "upsc-old");
     old.appendChild(el("h2", null, "Old school textbooks"));
     old.appendChild(el("p", "lead", "Many aspirants also read the pre-2024 NCERT school books. Pick a class."));
