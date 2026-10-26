@@ -83,6 +83,7 @@
   function sourceName(src) {
     if (src === "diksha") return "DIKSHA (Government of India)";
     if (src === "ncert") return "NCERT (ncert.nic.in)";
+    if (src === "mirror") return "a third-party copy of the NCERT files";
     return "Internet Archive";
   }
   function chapterNumber(name, index) {
@@ -134,7 +135,7 @@
     var firstReal = b.ch.filter(function (c) { return !/^prelims$/i.test(c[0]); })[0];
     if (!b.full && firstReal) actions.appendChild(ext(firstReal[1], "btn primary", "Open first chapter"));
     if (b.zip) actions.appendChild(ext(b.zip, "btn", "Download full book (ZIP)"));
-    if (b.page) actions.appendChild(ext(b.page, "btn", b.src === "diksha" ? "Read on DIKSHA" : "Archive page"));
+    if (b.page) actions.appendChild(ext(b.page, "btn", b.src === "diksha" ? "Read on DIKSHA" : b.src === "mirror" ? "Source page" : "Archive page"));
     if (!b.ch.length && !b.full) {
       actions.appendChild(ext(dikshaSearch(b.t + " class " + b.c), "btn", "Search DIKSHA"));
       actions.appendChild(ext(archiveSearch("NCERT " + b.t), "btn", "Search Internet Archive"));
