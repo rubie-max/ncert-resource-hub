@@ -18,11 +18,47 @@
   };
   var TABS = [["current", "Current syllabus", ""], ["old", "Old syllabus", "/old"]];
   var SECTIONS = [
-    { k: "books", t: "NCERT Books", d: "Textbooks, Class 1–12", mark: "B", color: "#0d7a72" },
-    { k: "solutions", t: "Solutions", d: "Chapter-wise answers", mark: "S", color: "#2563eb" },
-    { k: "exemplar", t: "Exemplar", d: "Extra questions & lab manuals", mark: "E", color: "#7c3aed" },
-    { k: "upsc", t: "UPSC", d: "Old NCERT history classics", mark: "U", color: "#b45309" }
+    { k: "books", t: "NCERT Books", d: "Textbooks, Class 1–12", icon: "book", color: "#4f46e5" },
+    { k: "solutions", t: "Solutions", d: "Chapter-wise answers", icon: "bulb", color: "#059669" },
+    { k: "exemplar", t: "Exemplar", d: "Extra questions & lab manuals", icon: "clipboard", color: "#d97706" },
+    { k: "upsc", t: "UPSC", d: "Old NCERT history classics", icon: "landmark", color: "#e11d48" }
   ];
+  var ICONS = {
+    home: '<path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/><path d="M10 21v-6h4v6"/>',
+    book: '<path d="M2 4h6a4 4 0 0 1 4 4v13a3 3 0 0 0-3-3H2z"/><path d="M22 4h-6a4 4 0 0 0-4 4v13a3 3 0 0 1 3-3h7z"/>',
+    bulb: '<path d="M9 18h6"/><path d="M10 22h4"/><path d="M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.3 1 2.3h6c0-1 .4-1.8 1-2.3A7 7 0 0 0 12 2z"/>',
+    clipboard: '<rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="m9 14 2 2 4-4"/>',
+    landmark: '<path d="M3 22h18"/><path d="M6 18v-7"/><path d="M10 18v-7"/><path d="M14 18v-7"/><path d="M18 18v-7"/><path d="M12 2 21 7H3z"/>',
+    file: '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M8 13h8"/><path d="M8 17h5"/>',
+    papers: '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M8 13h8"/><path d="M8 17h8"/><path d="M8 9h2"/>',
+    chev: '<path d="m9 18 6-6-6-6"/>',
+    back: '<path d="m15 18-6-6 6-6"/>',
+    check: '<path d="M20 6 9 17l-5-5"/>',
+    sigma: '<path d="M18 7V4H6l6 8-6 8h12v-3"/>',
+    flask: '<path d="M9 3h6"/><path d="M10 3v6L4.5 19a2 2 0 0 0 1.8 3h11.4a2 2 0 0 0 1.8-3L14 9V3"/><path d="M7 15h10"/>',
+    atom: '<circle cx="12" cy="12" r="1"/><ellipse cx="12" cy="12" rx="10" ry="4"/><ellipse cx="12" cy="12" rx="10" ry="4" transform="rotate(60 12 12)"/><ellipse cx="12" cy="12" rx="10" ry="4" transform="rotate(120 12 12)"/>',
+    leaf: '<path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.5 19 2c1 2 2 4.2 2 8 0 5.5-4.8 10-10 10z"/><path d="M2 21c0-3 1.9-5.4 5-6"/>',
+    lang: '<path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/>',
+    globe: '<circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15 15 0 0 1 0 20 15 15 0 0 1 0-20"/>',
+    scroll: '<path d="M8 21h12a2 2 0 0 0 2-2v-2H10v2a2 2 0 1 1-4 0V5a2 2 0 1 0-4 0v3h4"/><path d="M19 17V5a2 2 0 0 0-2-2H4"/>',
+    scale: '<path d="M12 3v18"/><path d="M7 21h10"/><path d="M3 7h18"/><path d="m6 7-3 7a3 3 0 0 0 6 0z"/><path d="m18 7-3 7a3 3 0 0 0 6 0z"/>',
+    chart: '<path d="M3 3v18h18"/><path d="m7 15 4-4 3 3 5-6"/>',
+    palette: '<circle cx="13.5" cy="6.5" r="1"/><circle cx="17.5" cy="10.5" r="1"/><circle cx="8.5" cy="7.5" r="1"/><circle cx="6.5" cy="12.5" r="1"/><path d="M12 2a10 10 0 0 0 0 20c1 0 1.7-.8 1.7-1.7 0-.4-.2-.8-.4-1.1-.3-.3-.4-.7-.4-1.1 0-.9.8-1.7 1.7-1.7h2A5.6 5.6 0 0 0 22 11c0-5-4.5-9-10-9z"/>',
+    music: '<path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>',
+    activity: '<path d="M22 12h-4l-3 9L9 3l-3 9H2"/>',
+    monitor: '<rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8"/><path d="M12 17v4"/>',
+    users: '<circle cx="9" cy="7" r="4"/><path d="M2 21v-2a4 4 0 0 1 4-4h6a4 4 0 0 1 4 4v2"/><path d="M16 3.1a4 4 0 0 1 0 7.8"/><path d="M22 21v-2a4 4 0 0 0-3-3.9"/>',
+    pen: '<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>'
+  };
+  var SUBJECT_ICON = {
+    "Mathematics": "sigma", "Science": "flask", "Chemistry": "flask", "Physics": "atom", "Biology": "leaf", "Biotechnology": "leaf",
+    "Environmental Studies": "leaf", "The World Around Us": "globe", "Social Science": "globe", "Geography": "globe",
+    "History": "scroll", "Knowledge Traditions": "scroll", "Political Science": "scale", "Economics": "chart",
+    "Accountancy": "chart", "Business Studies": "chart", "Arts": "palette", "Fine Arts": "palette", "Heritage Crafts": "palette",
+    "Graphic Design": "palette", "Music": "music", "Physical Education": "activity", "Health & Physical Education": "activity",
+    "Computer Science": "monitor", "Informatics Practices": "monitor", "Computer Technology": "monitor",
+    "Psychology": "users", "Sociology": "users", "Home Science": "home", "Creative Writing": "pen"
+  };
   var GROUP_LABEL = { current: "Current syllabus", old: "Old syllabus", practice: "Practice", upsc: "UPSC classic" };
   var NO_NEP_YET = [10, 11, 12];
 
@@ -150,17 +186,41 @@
     if (src === "mirror") return "a third-party copy of the NCERT files";
     return "Internet Archive";
   }
+  function chapterTitle(name) {
+    var t = String(name).replace(/^\s*(chapter|unit|lesson|ch\.?)\s*\d+\s*[-–:.)]*\s*/i, "").replace(/^\d+\s*[-–:.)]\s*/, "");
+    if (!t) return name;
+    if (t === t.toUpperCase() && /[A-Z]{3}/.test(t)) t = t.charAt(0) + t.slice(1).toLowerCase();
+    return t;
+  }
   function chapterNumber(name, index) {
     if (/^prelims$/i.test(name)) return "P";
     var m = String(name).match(/(\d+)/);
     return m ? m[1] : String(index + 1);
   }
-  function spine(b, cls) {
-    var s = el("span", cls || "spine", initial(b.t));
-    s.style.background = COLORS[b.s] || "#475569";
+  function icon(name, cls) {
+    var s = el("span", "ic" + (cls ? " " + cls : ""));
     s.setAttribute("aria-hidden", "true");
+    s.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + (ICONS[name] || ICONS.book) + "</svg>";
     return s;
   }
+  function subjectIconName(b) {
+    if (b.g === "upsc") return "scroll";
+    if (SUBJECT_ICON[b.s]) return SUBJECT_ICON[b.s];
+    if (MAIN_MEDIUMS.indexOf(b.s) !== -1 || b.s === b.m) return "lang";
+    return "book";
+  }
+  function spine(b, cls) {
+    var s = icon(subjectIconName(b), "sicon" + (cls ? " " + cls : ""));
+    s.style.setProperty("--c", COLORS[b.s] || "#64748b");
+    return s;
+  }
+  function backLink(href, label) {
+    var a = internal(href, "back");
+    a.appendChild(icon("back"));
+    a.appendChild(document.createTextNode(label));
+    return a;
+  }
+  function chip(text, cls) { return el("span", "mchip" + (cls ? " " + cls : ""), text); }
   function solUrl(b, path) {
     if (!b.sol) return "";
     var host = b.sol.h === "h" ? "hindi" : "www";
@@ -194,17 +254,23 @@
     var a = internal(bookHref(b), "book");
     a.appendChild(spine(b));
     var text = el("span", "book-text");
-    var title = el("strong", null, b.t);
-    if (opts.tag) title.appendChild(el("span", "badge " + b.g, GROUP_LABEL[b.g]));
-    if (b.sol) title.appendChild(el("span", "badge sol", "Solutions"));
-    if (!b.ch.length && !b.full) title.appendChild(el("span", "badge none", "No PDF yet"));
-    text.appendChild(title);
-    text.appendChild(el("span", null, bookMeta(b, opts.showClass)));
+    text.appendChild(el("strong", null, b.t));
+    var meta = el("span", "book-meta");
+    if (b.by) meta.appendChild(chip(b.by));
+    if (opts.showClass) meta.appendChild(chip("Class " + b.c));
+    if (opts.tag) meta.appendChild(chip(GROUP_LABEL[b.g]));
+    if (b.m && b.m !== b.s && (opts.tag || opts.showClass || filters.m !== b.m)) meta.appendChild(chip(b.m));
+    var total = countable(b);
+    if (b.full && !b.ch.length) meta.appendChild(chip("Full book"));
+    else if (b.ch.length) meta.appendChild(chip(plural(total || b.ch.length, "chapter")));
+    else meta.appendChild(chip("No PDF yet", "warn"));
+    if (b.sol) meta.appendChild(chip("Solutions", "sol"));
+    text.appendChild(meta);
     if (b.replacedBy.length && opts.showPair) text.appendChild(el("span", "pair-line", "Replaced by " + titles(b.replacedBy)));
     a.appendChild(text);
-    var done = readCount(b), total = countable(b);
+    var done = readCount(b);
     if (done) a.appendChild(el("span", "row-progress", done + "/" + total));
-    a.appendChild(el("span", "chev", "›"));
+    a.appendChild(icon("chev", "chev"));
     return a;
   }
 
@@ -316,9 +382,8 @@
     var grid = el("div", "sections");
     SECTIONS.forEach(function (s) {
       var a = internal("#/" + s.k, "section-card");
-      var mark = el("span", "section-mark", s.mark);
-      mark.style.background = s.color;
-      mark.setAttribute("aria-hidden", "true");
+      var mark = icon(s.icon, "section-mark");
+      mark.style.setProperty("--c", s.color);
       a.appendChild(mark);
       a.appendChild(el("b", null, s.t));
       a.appendChild(el("span", null, s.d));
@@ -334,13 +399,17 @@
       cont.appendChild(el("span", null, "Class " + last.c + (total ? " · " + readCount(last) + "/" + total + " read" : "")));
       app.appendChild(cont);
     }
-    app.appendChild(internal("#/more", "home-link", "Sample papers & resources"));
+    var more = internal("#/more", "home-link");
+    more.appendChild(icon("papers"));
+    more.appendChild(el("span", null, "Sample papers & resources"));
+    more.appendChild(icon("chev", "chev"));
+    app.appendChild(more);
   }
 
   function viewSection(k) {
     var s = sectionOf(k);
     var mine = load("ncert-class", null);
-    app.appendChild(internal("#/", "back", "← Home"));
+    app.appendChild(backLink("#/", "Home"));
     app.appendChild(el("h1", null, s.t));
     app.appendChild(el("p", "lead", k === "solutions" ? "Pick your class. Answers open on Tiwari Academy, an independent site." : "Pick your class."));
     var grid = el("div", "class-pad");
@@ -395,7 +464,7 @@
     save("ncert-class", c);
     var s = sectionOf(k);
     backTo = { href: location.hash, label: "Class " + c + " " + (k === "books" ? "books" : s.t.toLowerCase()), k: k, c: c };
-    app.appendChild(internal("#/" + k, "back", "← " + s.t));
+    app.appendChild(backLink("#/" + k, s.t));
     app.appendChild(el("h1", null, "Class " + c + " " + (k === "books" ? "books" : s.t.toLowerCase())));
     var strip = classStrip(k, c);
     app.appendChild(strip);
@@ -445,33 +514,48 @@
     save("ncert-last", b.id);
 
     var fromHash = backTo && backTo.c === b.c ? backTo : null;
-    if (b.g === "upsc") app.appendChild(internal("#/upsc", "back", "← UPSC"));
-    else if (fromHash) app.appendChild(internal(fromHash.href, "back", "← " + fromHash.label));
-    else app.appendChild(internal(tabHref(b.c, b.g), "back", "← Class " + b.c + (b.g === "practice" ? " exemplar" : "")));
+    if (b.g === "upsc") app.appendChild(backLink("#/upsc", "UPSC"));
+    else if (fromHash) app.appendChild(backLink(fromHash.href, fromHash.label));
+    else app.appendChild(backLink(tabHref(b.c, b.g), "Class " + b.c + (b.g === "practice" ? " exemplar" : "")));
 
-    var head = el("div", "book-head");
-    head.appendChild(spine(b, "spine big"));
-    var ht = el("div");
-    ht.appendChild(el("span", "badge " + b.g, GROUP_LABEL[b.g]));
+    var hero = el("section", "book-hero");
+    var top = el("div", "hero-top");
+    top.appendChild(spine(b, "big"));
+    var ht = el("div", "hero-text");
+    ht.appendChild(el("p", "kicker", (b.g === "upsc" ? "UPSC classic" : "Class " + b.c) + " · " + b.s));
     ht.appendChild(el("h1", null, b.t));
-    ht.appendChild(el("p", "lead", bookMeta(b, true)));
-    head.appendChild(ht);
-    app.appendChild(head);
+    top.appendChild(ht);
+    hero.appendChild(top);
+    var chips = el("div", "book-meta");
+    if (b.by) chips.appendChild(chip(b.by));
+    if (b.m && b.m !== b.s) chips.appendChild(chip(b.m));
+    if (b.ch.length) chips.appendChild(chip(plural(countable(b) || b.ch.length, "chapter")));
+    if (b.g !== "upsc") chips.appendChild(chip(GROUP_LABEL[b.g]));
+    if (b.sol) chips.appendChild(chip("Solutions", "sol"));
+    hero.appendChild(chips);
+    if (b.note) hero.appendChild(el("p", "note", b.note));
 
-    if (b.note) app.appendChild(el("p", "note", b.note));
-
-    var actions = el("div", "actions hero-actions");
-    if (b.full) actions.appendChild(ext(b.full, "btn primary", "Full book"));
-    var firstReal = b.ch.filter(function (c) { return !/^prelims$/i.test(c[0]); })[0];
-    if (!b.full && firstReal) actions.appendChild(ext(firstReal[1], "btn primary", "Open PDF"));
-    if (b.sol) actions.appendChild(ext(solUrl(b), "btn sol", "Solutions"));
-    if (b.zip) actions.appendChild(ext(b.zip, "btn more-btn", "ZIP"));
-    if (b.page) actions.appendChild(ext(b.page, "btn more-btn", b.src === "diksha" ? "DIKSHA" : b.src === "mirror" ? "Source" : "Archive"));
-    if (!b.ch.length && !b.full) {
-      actions.appendChild(ext(dikshaSearch(b.t + " class " + b.c), "btn", "Search DIKSHA"));
-      actions.appendChild(ext(archiveSearch("NCERT " + b.t), "btn", "Search Archive"));
+    var actions = el("div", "hero-actions");
+    function heroBtn(href, cls, ic, label) {
+      var a = ext(href, "btn " + cls);
+      a.appendChild(icon(ic));
+      a.appendChild(document.createTextNode(label));
+      actions.appendChild(a);
     }
-    app.appendChild(actions);
+    var firstReal = b.ch.filter(function (c) { return !/^prelims$/i.test(c[0]); })[0];
+    if (b.full) heroBtn(b.full, "primary", "file", "Read full book");
+    else if (firstReal) heroBtn(firstReal[1], "primary", "file", "Start reading");
+    if (b.sol) heroBtn(solUrl(b), "sol", "bulb", "Solutions");
+    if (!b.ch.length && !b.full) {
+      heroBtn(dikshaSearch(b.t + " class " + b.c), "", "globe", "Search DIKSHA");
+      heroBtn(archiveSearch("NCERT " + b.t), "", "globe", "Search Archive");
+    }
+    hero.appendChild(actions);
+    var extra = el("div", "hero-extra");
+    if (b.zip) extra.appendChild(ext(b.zip, null, "Download ZIP"));
+    if (b.page) extra.appendChild(ext(b.page, null, b.src === "diksha" ? "Open on DIKSHA" : b.src === "mirror" ? "Source page" : "Internet Archive page"));
+    if (extra.children.length) hero.appendChild(extra);
+    app.appendChild(hero);
 
     if (b.replacedBy.length || b.replaces.length) {
       var pair = el("section", "pair");
@@ -493,45 +577,52 @@
       var bar = el("div", "progress");
       var fill = el("span");
       bar.appendChild(fill);
-      sec.appendChild(bar);
+      if (total) sec.appendChild(bar);
 
-      var list = el("ul", "chapters");
+      var list = el("ol", "chapters");
       var ticks = [];
       function refresh() {
         var done = readCount(b);
-        status.textContent = total ? done + " of " + plural(total, "chapter") + " read" : "";
+        status.textContent = total ? done + "/" + total + " read" : "";
         fill.style.width = total ? Math.round(done / total * 100) + "%" : "0";
-        ticks.forEach(function (t) { t[0].setAttribute("aria-pressed", String(readOf(b).indexOf(t[1]) !== -1)); t[2].classList.toggle("done", readOf(b).indexOf(t[1]) !== -1); });
+        ticks.forEach(function (t) {
+          var on = readOf(b).indexOf(t[1]) !== -1;
+          t[0].setAttribute("aria-pressed", String(on));
+          t[2].classList.toggle("done", on);
+        });
       }
       b.ch.forEach(function (c, i) {
-        var li = el("li", "ch-card");
-        var top = el("div", "ch-top");
+        var li = el("li", "ch-row");
         var prelims = /^prelims$/i.test(c[0]);
-        var tick = el("button", "tick" + (prelims ? " blank" : ""));
-        if (prelims) tick.disabled = true;
-        tick.type = "button";
-        tick.title = "Mark as read";
-        tick.setAttribute("aria-label", "Mark " + c[0] + " as read");
-        tick.addEventListener("click", function () { setRead(b, i, readOf(b).indexOf(i) === -1); refresh(); });
-        var title = el("div", "ch-title");
-        title.appendChild(el("b", null, chapterNumber(c[0], i)));
-        title.appendChild(el("span", null, c[0]));
-        top.appendChild(tick);
-        top.appendChild(title);
-        li.appendChild(top);
-        var btns = el("div", "ch-btns");
-        var pdf = ext(c[1], "btn primary", "PDF");
+        var num = el("button", "ch-num");
+        num.type = "button";
+        num.appendChild(el("span", "n", chapterNumber(c[0], i)));
+        num.appendChild(icon("check", "tickmark"));
+        if (prelims) num.disabled = true;
+        num.setAttribute("aria-label", "Mark " + c[0] + " as read");
+        num.addEventListener("click", function () { setRead(b, i, readOf(b).indexOf(i) === -1); refresh(); });
+        li.appendChild(num);
+        li.appendChild(el("span", "ch-name", prelims ? "Prelims" : chapterTitle(c[0])));
+        var btns = el("span", "ch-acts");
+        var pdf = ext(c[1], "pill-btn");
+        pdf.appendChild(icon("file"));
+        pdf.appendChild(document.createTextNode("PDF"));
+        pdf.setAttribute("aria-label", "Open " + c[0] + " PDF");
         pdf.addEventListener("click", function () { if (!prelims) { setRead(b, i, true); refresh(); } });
         btns.appendChild(pdf);
         if (b.sol && b.sol.c && b.sol.c[String(i)]) {
-          btns.appendChild(ext(solUrl(b, b.sol.c[String(i)]), "btn sol", "Solve"));
+          var sv = ext(solUrl(b, b.sol.c[String(i)]), "pill-btn sol");
+          sv.appendChild(icon("bulb"));
+          sv.appendChild(document.createTextNode("Solve"));
+          sv.setAttribute("aria-label", "Solutions for " + c[0]);
+          btns.appendChild(sv);
         }
         li.appendChild(btns);
-        ticks.push([tick, i, li]);
+        if (!prelims) ticks.push([num, i, li]);
         list.appendChild(li);
       });
       sec.appendChild(list);
-      sec.appendChild(el("p", "source", "Opening a chapter marks it as read. Progress stays in this browser. Solutions open on Tiwari Academy, an independent site — check them against the textbook."));
+      sec.appendChild(el("p", "source", "Tap a chapter number to mark it read. Opening a PDF marks it too. Solutions open on Tiwari Academy, an independent site — check them against the textbook."));
       app.appendChild(sec);
       refresh();
     } else if (!b.full) {
@@ -553,7 +644,7 @@
 
   function viewUpsc() {
     backTo = null;
-    app.appendChild(internal("#/", "back", "← Home"));
+    app.appendChild(backLink("#/", "Home"));
     app.appendChild(el("h1", null, "UPSC"));
     app.appendChild(el("p", "lead", "Out-of-print NCERT history books that UPSC aspirants still read, in the order they are usually read."));
     var ol = el("ol", "steps");
@@ -599,7 +690,7 @@
   }
 
   function viewMore() {
-    app.appendChild(internal("#/", "back", "← Home"));
+    app.appendChild(backLink("#/", "Home"));
     app.appendChild(el("h1", null, "Papers & resources"));
     app.appendChild(el("p", "lead", "Sample papers and official documents that go with the textbooks."));
     app.appendChild(el("h2", null, "Papers"));
@@ -683,6 +774,10 @@
       route();
       searchInput.value = keep;
     }, 220);
+  });
+  [].forEach.call(document.querySelectorAll("[data-icon]"), function (n) {
+    n.textContent = "";
+    n.appendChild(icon(n.dataset.icon));
   });
   window.addEventListener("hashchange", route);
   route();
