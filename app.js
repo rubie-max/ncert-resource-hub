@@ -66,13 +66,16 @@
   var NO_NEP_YET = [10, 11, 12];
 
   var UPSC_PATH = [
-    { t: "Ancient India", d: "Start with Romila Thapar's middle-school book, then R.S. Sharma.", ids: ["classic-7", "classic-1"] },
-    { t: "Medieval India", d: "The old Class 7 book, then Satish Chandra.", ids: ["classic-8", "classic-2"] },
-    { t: "Modern India", d: "Bipan Chandra's Modern India.", ids: ["classic-3"] },
-    { t: "Hindi editions", d: "The same three periods in Hindi.", ids: ["classic-4", "classic-5", "classic-6"] },
-    { t: "The 2002 series", d: "The short-lived replacements, still read for a second view.", ids: ["classic-9", "classic-10", "classic-11"] },
-    { t: "Other out-of-print books", d: "", ids: ["classic-12"] }
+    { lang: "English", t: "Ancient India", d: "Start with Romila Thapar's middle-school book, then R.S. Sharma.", ids: ["classic-7", "classic-1"] },
+    { lang: "English", t: "Medieval India", d: "The old Class 7 book, then Satish Chandra.", ids: ["classic-8", "classic-2"] },
+    { lang: "English", t: "Modern India", d: "Bipan Chandra's Modern India.", ids: ["classic-3"] },
+    { lang: "English", t: "The 2002 series", d: "Short-lived replacements, still read for a second view.", ids: ["classic-9", "classic-10", "classic-11"] },
+    { lang: "English", t: "Also on the shelf", d: "", ids: ["classic-12"] },
+    { lang: "Hindi", t: "प्राचीन भारत", d: "Ancient India, Class 11.", ids: ["classic-4"] },
+    { lang: "Hindi", t: "मध्यकालीन भारत", d: "Medieval India by Satish Chandra.", ids: ["classic-5"] },
+    { lang: "Hindi", t: "आधुनिक भारत", d: "Modern India by Bipan Chandra.", ids: ["classic-6"] }
   ];
+
 
   var PRACTICE = [
     { t: "CBSE Sample Papers", d: "Official sample question papers and marking schemes for Classes 10 and 12.",
@@ -379,34 +382,77 @@
   }
   var backTo = null;
 
-  function viewHome() {
-    var last = BY_ID[load("ncert-last", "")];
-    app.appendChild(el("h1", null, "NCERT Library"));
-    var grid = el("div", "sections");
-    SECTIONS.forEach(function (s) {
-      var a = internal("#/" + s.k, "section-card");
-      var mark = icon(s.icon, "section-mark");
-      mark.style.setProperty("--c", s.color);
-      a.appendChild(mark);
-      a.appendChild(el("b", null, s.t));
-      a.appendChild(el("span", null, s.d));
-      grid.appendChild(a);
-    });
-    app.appendChild(grid);
-
-    if (last) {
-      var cont = internal(bookHref(last), "continue-card");
-      cont.appendChild(el("small", null, "Continue reading"));
-      cont.appendChild(el("b", null, last.t));
-      var total = countable(last);
-      cont.appendChild(el("span", null, "Class " + last.c + (total ? " · " + readCount(last) + "/" + total + " read" : "")));
-      app.appendChild(cont);
+  var SECTION_COUNT = null;
+  function sectionCount(k) {
+    if (!SECTION_COUNT) {
+      SECTION_COUNT = { books: 0, solutions: 0, exemplar: 0, upsc: 0 };
+      BOOKS.forEach(function (b) {
+        if (b.g === "current" || b.g === "old") SECTION_COUNT.books++;
+        if (b.g === "practice") SECTION_COUNT.exemplar++;
+        if (b.g === "upsc") SECTION_COUNT.upsc++;
+        if (b.sol && b.g !== "upsc") SECTION_COUNT.solutions++;
+      });
     }
+    return SECTION_COUNT[k];
+  }
+  function sectionCountText(k) {
+    var n = sectionCount(k);
+    return k === "solutions" ? n + " books solved" : plural(n, "book");
+  }
+  function continueCard(last) {
+    var cont = internal(bookHref(last), "resume");
+    cont.appendChild(spine(last, "resume-ic"));
+    var mid = el("span", "resume-mid");
+    mid.appendChild(el("small", null, "Continue reading"));
+    mid.appendChild(el("b", null, last.t));
+    var total = countable(last), done = readCount(last);
+    mid.appendChild(el("span", null, "Class " + last.c + " · " + last.s + (total ? " · " + done + "/" + total + " chapters" : "")));
+    if (total) {
+      var bar = el("span", "tile-bar");
+      var fill = el("span");
+      fill.style.width = Math.round(done / total * 100) + "%";
+      bar.appendChild(fill);
+      mid.appendChild(bar);
+    }
+    cont.appendChild(mid);
+    cont.appendChild(icon("chev", "chev"));
+    return cont;
+  }
+  function papersLink() {
     var more = internal("#/more", "home-link");
     more.appendChild(icon("papers"));
     more.appendChild(el("span", null, "Sample papers & resources"));
     more.appendChild(icon("chev", "chev"));
-    app.appendChild(more);
+    return more;
+  }
+  function homeBento(last) {
+    app.appendChild(el("h1", "bento-title", "What do you want to open?"));
+    var grid = el("div", "bento");
+    SECTIONS.forEach(function (s, i) {
+      var a = internal("#/" + s.k, "bento-card" + (i === 0 ? " big" : i === 3 ? " wide" : ""));
+      a.style.setProperty("--c", s.color);
+      a.appendChild(icon(s.icon, "bento-bg"));
+      a.appendChild(icon(s.icon, "bento-ic"));
+      a.appendChild(el("b", null, s.t));
+      a.appendChild(el("span", null, s.d));
+      a.appendChild(el("span", "bento-n", String(sectionCount(s.k))));
+      grid.appendChild(a);
+    });
+    app.appendChild(grid);
+    if (last) app.appendChild(continueCard(last));
+    var stats = el("div", "stats");
+    [[String(BOOKS.length), "books"], [String(mediumsOf(BOOKS).length), "languages"], ["1–12", "classes"]].forEach(function (x) {
+      var s = el("div", "stat");
+      s.appendChild(el("b", null, x[0]));
+      s.appendChild(el("span", null, x[1]));
+      stats.appendChild(s);
+    });
+    app.appendChild(stats);
+    app.appendChild(papersLink());
+  }
+
+  function viewHome() {
+    homeBento(BY_ID[load("ncert-last", "")]);
   }
 
   function viewSection(k) {
@@ -468,21 +514,115 @@
     return a;
   }
 
+  var NATIVE = {
+    English: ["English", "Aa"], Hindi: ["हिन्दी", "अ"], Urdu: ["اردو", "ا"], Sanskrit: ["संस्कृतम्", "सं"],
+    Assamese: ["অসমীয়া", "অ"], Bengali: ["বাংলা", "বা"], Bodo: ["बड़ो", "ब"], Dogri: ["डोगरी", "डो"],
+    Gujarati: ["ગુજરાતી", "ગ"], Kannada: ["ಕನ್ನಡ", "ಕ"], Kashmiri: ["کٲشُر", "ک"], Konkani: ["कोंकणी", "को"],
+    Maithili: ["मैथिली", "मै"], Malayalam: ["മലയാളം", "മ"], Manipuri: ["মণিপুরী", "ম"], Marathi: ["मराठी", "म"],
+    Nepali: ["नेपाली", "ने"], Odia: ["ଓଡ଼ିଆ", "ଓ"], Punjabi: ["ਪੰਜਾਬੀ", "ਪ"], Santhali: ["ᱥᱟᱱᱛᱟᱲᱤ", "ᱥ"],
+    Sindhi: ["سنڌي", "س"], Tamil: ["தமிழ்", "த"], Telugu: ["తెలుగు", "తె"]
+  };
+  function nativeOf(m) { return m === "All" ? ["Every medium", "", ""] : (NATIVE[m] || [m, m.charAt(0)]); }
+  function langGlyph(m) {
+    var g = el("span", "lang-glyph", m === "All" ? "" : nativeOf(m)[1]);
+    if (m === "All") g.appendChild(icon("globe"));
+    return g;
+  }
+
+  function langSheet(mediums, all, current, onPick) {
+    var dlg = el("dialog", "sheet");
+    dlg.setAttribute("aria-label", "Choose medium");
+    var head = el("div", "sheet-head");
+    head.appendChild(el("h2", null, "Choose medium"));
+    var close = el("button", "sheet-x");
+    close.type = "button";
+    close.setAttribute("aria-label", "Close");
+    close.textContent = "×";
+    head.appendChild(close);
+    dlg.appendChild(head);
+    var find = el("input", "sheet-find");
+    find.type = "search";
+    find.placeholder = "Search " + mediums.length + " languages";
+    find.setAttribute("aria-label", "Search languages");
+    dlg.appendChild(find);
+    var grid = el("div", "lang-grid");
+    dlg.appendChild(grid);
+    ["All"].concat(mediums).forEach(function (m) {
+      var n = m === "All" ? all.length : all.filter(function (b) { return b.m === m; }).length;
+      var opt = el("button", "lang-opt");
+      opt.type = "button";
+      opt.dataset.q = (m + " " + nativeOf(m)[0]).toLowerCase();
+      opt.setAttribute("aria-pressed", String(m === current));
+      opt.appendChild(langGlyph(m));
+      var txt = el("span", "lang-txt");
+      txt.appendChild(el("strong", null, m === "All" ? "All languages" : m));
+      txt.appendChild(el("span", null, m === "All" || m === "English" ? plural(n, "book") : nativeOf(m)[0] + " · " + n));
+      opt.appendChild(txt);
+      if (m === current) opt.appendChild(icon("check", "lang-tick"));
+      opt.addEventListener("click", function () { dlg.close(); onPick(m); });
+      grid.appendChild(opt);
+    });
+    find.addEventListener("input", function () {
+      var q = find.value.trim().toLowerCase();
+      [].forEach.call(grid.children, function (o) { o.hidden = q && o.dataset.q.indexOf(q) === -1; });
+    });
+    close.addEventListener("click", function () { dlg.close(); });
+    dlg.addEventListener("click", function (e) { if (e.target === dlg) dlg.close(); });
+    dlg.addEventListener("close", function () { dlg.remove(); });
+    document.body.appendChild(dlg);
+    dlg.showModal();
+  }
+
   function bookList(all) {
     var mediums = mediumsOf(all);
     if (filters.m !== "All" && mediums.indexOf(filters.m) === -1) filters.m = mediums[0] || "All";
-    var bar = el("div", "toolbar");
+    var bar = el("div", "filterbar");
+    var top = el("div", "filter-top");
+    var countEl = el("span", "filter-count");
     var chipsBox = el("div", "subj-chips");
     var results = el("div", "tiles");
     function inLang(b) { return filters.m === "All" || b.m === filters.m; }
+    function langLabel() { return filters.m === "All" ? "All languages" : filters.m; }
+    function pickLang(m) {
+      filters.m = m;
+      save("ncert-lang", m);
+      drawLang();
+      drawChips();
+      draw();
+    }
+    function drawLang() {
+      top.textContent = "";
+      var quiet = el("button", "lang-quiet");
+      quiet.type = "button";
+      quiet.appendChild(langGlyph(filters.m));
+      var qtxt = el("span", "lang-txt");
+      qtxt.appendChild(el("strong", null, langLabel()));
+      var nat = nativeOf(filters.m)[0];
+      qtxt.appendChild(el("span", null, filters.m !== "All" && nat !== filters.m ? nat : mediums.length + " languages"));
+      quiet.appendChild(qtxt);
+      quiet.appendChild(icon("down", "quiet-caret"));
+      quiet.setAttribute("aria-label", "Medium: " + langLabel() + ". Change language");
+      quiet.addEventListener("click", function () { langSheet(mediums, all, filters.m, pickLang); });
+      top.appendChild(quiet);
+      top.appendChild(countEl);
+    }
     function drawChips() {
-      var subjects = groupBySubject(all.filter(inLang)).map(function (p) { return p[0]; });
+      var groups = groupBySubject(all.filter(inLang));
+      var subjects = groups.map(function (p) { return p[0]; });
       if (subjects.indexOf(filters.s) === -1) filters.s = "All";
       chipsBox.textContent = "";
       chipsBox.hidden = subjects.length < 2;
-      ["All"].concat(subjects).forEach(function (name) {
-        var b = el("button", "chip", name === "All" ? "All subjects" : name);
+      var total = groups.reduce(function (n, p) { return n + p[1].length; }, 0);
+      var showN = total > groups.length;
+      [["All", null, total]].concat(groups.map(function (p) { return [p[0], p[1][0], p[1].length]; })).forEach(function (g) {
+        var name = g[0];
+        var b = el("button", "schip");
         b.type = "button";
+        b.style.setProperty("--c", name === "All" ? "var(--accent)" : COLORS[name] || "#64748b");
+        b.appendChild(icon(name === "All" ? "book" : subjectIconName(g[1])));
+        b.appendChild(el("span", null, name === "All" ? "All" : name));
+        if (showN || name === "All") b.appendChild(el("span", "schip-n", String(g[2])));
+        else b.classList.add("bare");
         b.setAttribute("aria-pressed", String(filters.s === name));
         b.addEventListener("click", function () {
           filters.s = name;
@@ -495,33 +635,16 @@
     function draw() {
       results.textContent = "";
       var list = all.filter(passes);
+      countEl.textContent = plural(list.length, "book");
       if (!list.length) { results.appendChild(el("p", "empty", "No books match these filters.")); return; }
       groupBySubject(list).forEach(function (p) { p[1].forEach(function (b) { results.appendChild(bookTile(b)); }); });
     }
-    if (mediums.length > 1) {
-      var pick = el("label", "lang-pick");
-      pick.appendChild(icon("lang"));
-      var sel = el("select");
-      sel.setAttribute("aria-label", "Language");
-      ["All"].concat(mediums).forEach(function (m) {
-        var o = el("option", null, m === "All" ? "All languages" : m);
-        o.value = m;
-        if (m === filters.m) o.selected = true;
-        sel.appendChild(o);
-      });
-      sel.addEventListener("change", function () {
-        filters.m = sel.value;
-        save("ncert-lang", sel.value);
-        drawChips();
-        draw();
-      });
-      pick.appendChild(sel);
-      pick.appendChild(icon("down", "caret"));
-      bar.appendChild(pick);
-    }
+    if (mediums.length > 1) drawLang();
+    else top.appendChild(countEl);
+    bar.appendChild(top);
     bar.appendChild(chipsBox);
     drawChips();
-    if (bar.children.length > 1 || !chipsBox.hidden) app.appendChild(bar);
+    if (mediums.length > 1 || !chipsBox.hidden) app.appendChild(bar);
     app.appendChild(results);
     draw();
   }
@@ -708,36 +831,99 @@
     app.appendChild(src);
   }
 
+  function upscBook(b) {
+    var card = el("div", "ubook");
+    var main = internal(bookHref(b), "ubook-main");
+    var cover = el("span", "ubook-cover");
+    cover.appendChild(icon("scroll"));
+    main.appendChild(cover);
+    var text = el("span", "ubook-text");
+    text.appendChild(el("strong", null, b.t));
+    if (b.by) text.appendChild(el("span", "ubook-by", b.by));
+    text.appendChild(el("span", "ubook-sub", "Class " + b.c + " · " + (b.full ? "Full book PDF" : plural(countable(b), "chapter"))));
+    main.appendChild(text);
+    card.appendChild(main);
+    var href = b.full || (b.ch[0] && b.ch[0][1]);
+    if (href) {
+      var read = ext(href, "pill-btn ubook-read");
+      read.appendChild(icon("file"));
+      read.appendChild(document.createTextNode("Read"));
+      read.setAttribute("aria-label", "Read " + b.t + (b.by ? " by " + b.by : ""));
+      card.appendChild(read);
+    }
+    return card;
+  }
+
   function viewUpsc() {
     backTo = null;
+    var lang = load("ncert-upsc-lang", "English");
     app.appendChild(backLink("#/", "Home"));
-    app.appendChild(el("h1", null, "UPSC"));
-    app.appendChild(el("p", "lead", "Out-of-print NCERT history books that UPSC aspirants still read, in the order they are usually read."));
-    var ol = el("ol", "steps");
-    UPSC_PATH.forEach(function (step) {
-      var li = el("li");
-      li.appendChild(el("h2", null, step.t));
-      if (step.d) li.appendChild(el("p", "lead", step.d));
-      var box = el("div", "list");
-      step.ids.forEach(function (id) { if (BY_ID[id]) box.appendChild(bookRow(BY_ID[id], { showClass: true })); });
-      li.appendChild(box);
-      ol.appendChild(li);
-    });
-    app.appendChild(ol);
 
-    app.appendChild(el("h2", null, "Old school textbooks"));
-    app.appendChild(el("p", "lead", "Many aspirants also read the pre-2024 school books. They are in each class's Old syllabus tab."));
-    var grid = el("div", "class-grid");
+    var hero = el("section", "upsc-hero");
+    var mark = icon("landmark", "section-mark");
+    mark.style.setProperty("--c", sectionOf("upsc").color);
+    hero.appendChild(mark);
+    var ht = el("div");
+    ht.appendChild(el("h1", null, "UPSC shelf"));
+    ht.appendChild(el("p", "lead", "Out-of-print NCERT history books aspirants still read, in the order they are usually read."));
+    var chips = el("div", "book-meta");
+    chips.appendChild(chip(plural(UPSC.length, "book")));
+    chips.appendChild(chip("English & Hindi"));
+    chips.appendChild(chip("Full book PDFs"));
+    ht.appendChild(chips);
+    hero.appendChild(ht);
+    app.appendChild(hero);
+
+    var seg = el("div", "seg");
+    seg.setAttribute("role", "group");
+    seg.setAttribute("aria-label", "Language");
+    var path = el("ol", "upath");
+    function draw() {
+      path.textContent = "";
+      UPSC_PATH.filter(function (s) { return s.lang === lang; }).forEach(function (step, i) {
+        var li = el("li", "ustep");
+        li.appendChild(el("span", "ustep-num", String(i + 1)));
+        var body = el("div", "ustep-body");
+        body.appendChild(el("h2", null, step.t));
+        if (step.d) body.appendChild(el("p", "ustep-d", step.d));
+        var box = el("div", "ubooks");
+        step.ids.forEach(function (id) { if (BY_ID[id]) box.appendChild(upscBook(BY_ID[id])); });
+        body.appendChild(box);
+        li.appendChild(body);
+        path.appendChild(li);
+      });
+    }
+    [["English", "English"], ["Hindi", "हिंदी"]].forEach(function (l) {
+      var b = el("button", null, l[1]);
+      b.type = "button";
+      b.setAttribute("aria-pressed", String(lang === l[0]));
+      b.addEventListener("click", function () {
+        lang = l[0];
+        save("ncert-upsc-lang", lang);
+        [].forEach.call(seg.children, function (x) { x.setAttribute("aria-pressed", String(x === b)); });
+        draw();
+      });
+      seg.appendChild(b);
+    });
+    app.appendChild(seg);
+    app.appendChild(path);
+    draw();
+
+    var old = el("section", "upsc-old");
+    old.appendChild(el("h2", null, "Old school textbooks"));
+    old.appendChild(el("p", "lead", "Many aspirants also read the pre-2024 NCERT school books. Pick a class."));
+    var grid = el("div", "old-grid");
     for (var c = 1; c <= 12; c++) {
       var n = inGroup(c, "old").length;
       if (!n) continue;
-      var tile = internal(tabHref(c, "old"), "class-tile");
-      tile.appendChild(el("small", null, "Class"));
+      var tile = internal(tabHref(c, "old"), "old-tile");
       tile.appendChild(el("b", null, String(c)));
-      tile.appendChild(el("span", null, plural(n, "old book")));
+      tile.appendChild(el("span", null, plural(n, "book")));
+      tile.setAttribute("aria-label", "Class " + c + ", " + plural(n, "old book"));
       grid.appendChild(tile);
     }
-    app.appendChild(grid);
+    old.appendChild(grid);
+    app.appendChild(old);
   }
 
   function cards(items) {
@@ -793,6 +979,7 @@
     var validClass = n >= 1 && n <= 12;
     if (parts[0] === "old") { location.replace("#/upsc"); return; }
     if (parts[0] === "class" && parts[2] === "practice") { location.replace("#/exemplar/" + parts[1]); return; }
+    [].forEach.call(document.querySelectorAll("dialog.sheet"), function (d) { d.close(); });
     app.textContent = "";
     if (parts[0] === "class" && validClass) { name = "books"; viewClass(n, parts[2] || "current"); }
     else if (parts[0] === "books") { name = "books"; viewSection("books"); }
