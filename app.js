@@ -12,12 +12,22 @@
     "Heritage Crafts": "#be123c", "Graphic Design": "#7c3aed", "Creative Writing": "#9d174d", "Knowledge Traditions": "#92400e"
   };
   var MAIN_MEDIUMS = ["English", "Hindi", "Urdu", "Sanskrit"];
-  var EDITIONS = ["All", "NEP 2020", "Earlier"];
+  var SUBJECT_FAMILY = {
+    "History": "Social Science", "Geography": "Social Science", "Political Science": "Social Science", "Economics": "Social Science",
+    "Environmental Studies": "EVS", "The World Around Us": "EVS"
+  };
+  var TABS = [["current", "Current syllabus", ""], ["old", "Old syllabus", "/old"], ["practice", "Practice", "/practice"]];
+  var GROUP_LABEL = { current: "Current syllabus", old: "Old syllabus", practice: "Practice", upsc: "UPSC classic" };
+  var NO_NEP_YET = [10, 11, 12];
 
-  var CURRENT = BOOKS.filter(function (b) { return b.e === "nep" || b.e === "old"; });
-  var CLASSICS = BOOKS.filter(function (b) { return b.e === "classic"; });
-  var REPLACED = BOOKS.filter(function (b) { return b.e === "replaced"; });
-  var PRACTICE_BOOKS = BOOKS.filter(function (b) { return b.e === "practice"; });
+  var UPSC_PATH = [
+    { t: "Ancient India", d: "Start with Romila Thapar's middle-school book, then R.S. Sharma.", ids: ["classic-7", "classic-1"] },
+    { t: "Medieval India", d: "The old Class 7 book, then Satish Chandra.", ids: ["classic-8", "classic-2"] },
+    { t: "Modern India", d: "Bipan Chandra's Modern India.", ids: ["classic-3"] },
+    { t: "Hindi editions", d: "The same three periods in Hindi.", ids: ["classic-4", "classic-5", "classic-6"] },
+    { t: "The 2002 series", d: "The short-lived replacements, still read for a second view.", ids: ["classic-9", "classic-10", "classic-11"] },
+    { t: "Other out-of-print books", d: "", ids: ["classic-12"] }
+  ];
 
   var PRACTICE = [
     { t: "NCERT Exemplar Problems", d: "Extra questions with answers for Maths and Science, Classes 6–12.",
@@ -50,9 +60,56 @@
       links: [["Open NDLI", "https://ndl.iitkgp.ac.in/"]] }
   ];
 
+  /* ---------- grouping ---------- */
+  var BY_ID = {};
+  var NEW_BY_KEY = {};
+  function family(s) { return SUBJECT_FAMILY[s] || s; }
+  function key(b) { return b.c + "|" + b.m + "|" + family(b.s); }
+
+  BOOKS.forEach(function (b) {
+    BY_ID[b.id] = b;
+    b.replacedBy = [];
+    b.replaces = [];
+    if (b.e === "nep") (NEW_BY_KEY[key(b)] = NEW_BY_KEY[key(b)] || []).push(b);
+  });
+  BOOKS.forEach(function (b) {
+    if (b.e === "classic") b.g = "upsc";
+    else if (b.e === "practice") b.g = "practice";
+    else if (b.e === "nep") b.g = "current";
+    else if (b.e === "replaced" || NEW_BY_KEY[key(b)]) b.g = "old";
+    else b.g = "current";
+    if (b.g === "old" && NEW_BY_KEY[key(b)]) {
+      b.replacedBy = NEW_BY_KEY[key(b)];
+      b.replacedBy.forEach(function (n) { n.replaces.push(b); });
+    }
+  });
+
+  function inGroup(c, g) { return BOOKS.filter(function (b) { return b.c === c && b.g === g; }); }
+  var UPSC = BOOKS.filter(function (b) { return b.g === "upsc"; });
+
+  /* ---------- saved on this device ---------- */
+  function load(k, fallback) {
+    try { var v = localStorage.getItem(k); return v ? JSON.parse(v) : fallback; } catch (e) { return fallback; }
+  }
+  function save(k, v) {
+    try { if (v == null) localStorage.removeItem(k); else localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* storage off */ }
+  }
+  var read = load("ncert-read", {});
+  function readOf(b) { return read[b.id] || []; }
+  function setRead(b, i, on) {
+    var list = readOf(b).filter(function (x) { return x !== i; });
+    if (on) list.push(i);
+    if (list.length) read[b.id] = list; else delete read[b.id];
+    save("ncert-read", read);
+  }
+  function countable(b) { return b.ch.filter(function (c) { return !/^prelims$/i.test(c[0]); }).length; }
+  function readCount(b) {
+    return readOf(b).filter(function (i) { return b.ch[i] && !/^prelims$/i.test(b.ch[i][0]); }).length;
+  }
+
   var app = document.getElementById("app");
   var searchInput = document.getElementById("q");
-  var filters = { m: "All", e: "All", s: "All" };
+  var filters = { m: load("ncert-lang", "All"), s: "All" };
 
   function dikshaSearch(q) { return "https://diksha.gov.in/search?key=" + encodeURIComponent(q); }
   function archiveSearch(q) { return "https://archive.org/search?query=" + encodeURIComponent(q); }
@@ -91,84 +148,50 @@
     var m = String(name).match(/(\d+)/);
     return m ? m[1] : String(index + 1);
   }
+  function spine(b, cls) {
+    var s = el("span", cls || "spine", initial(b.t));
+    s.style.background = COLORS[b.s] || "#475569";
+    s.setAttribute("aria-hidden", "true");
+    return s;
+  }
+  function bookHref(b) { return "#/book/" + encodeURIComponent(b.id); }
+  function tabHref(c, g) {
+    for (var i = 0; i < TABS.length; i++) if (TABS[i][0] === g) return "#/class/" + c + TABS[i][2];
+    return "#/class/" + c;
+  }
+  function titles(list) {
+    var seen = {}, out = [];
+    list.forEach(function (b) { if (!seen[b.t]) { seen[b.t] = true; out.push(b.t); } });
+    return out.join(", ");
+  }
 
-  function bookMeta(b) {
+  function bookMeta(b, showClass) {
     var bits = [];
     if (b.by) bits.push(b.by);
-    if (b.e === "classic" || b.e === "replaced" || b.e === "practice") bits.push("Class " + b.c);
+    if (showClass) bits.push("Class " + b.c);
+    bits.push(b.s);
     if (b.m && b.m !== b.s) bits.push(b.m);
     if (b.full) bits.push("Full book PDF");
-    else if (b.ch.length) bits.push(plural(b.ch.length, "file"));
+    else if (b.ch.length) bits.push(plural(countable(b) || b.ch.length, "chapter"));
     return bits.join(" · ");
   }
 
-  function bookRow(b) {
-    var d = el("details", "book");
-    var s = el("summary");
-    var spine = el("span", "spine", initial(b.t));
-    spine.style.background = COLORS[b.s] || "#475569";
-    spine.setAttribute("aria-hidden", "true");
+  function bookRow(b, opts) {
+    opts = opts || {};
+    var a = internal(bookHref(b), "book");
+    a.appendChild(spine(b));
     var text = el("span", "book-text");
     var title = el("strong", null, b.t);
-    if (b.e === "nep") title.appendChild(el("span", "badge nep", "NEP 2020"));
+    if (opts.tag) title.appendChild(el("span", "badge " + b.g, GROUP_LABEL[b.g]));
     if (!b.ch.length && !b.full) title.appendChild(el("span", "badge none", "No PDF yet"));
     text.appendChild(title);
-    text.appendChild(el("span", null, bookMeta(b) || b.s));
-    s.appendChild(spine);
-    s.appendChild(text);
-    s.appendChild(el("span", "chev", "›"));
-    d.appendChild(s);
-
-    d.addEventListener("toggle", function () {
-      if (!d.open || d.dataset.ready) return;
-      d.dataset.ready = "1";
-      d.appendChild(bookBody(b));
-    });
-    return d;
-  }
-
-  function bookBody(b) {
-    var body = el("div", "book-body");
-    if (b.note) body.appendChild(el("p", "note", b.note));
-    var actions = el("div", "actions");
-    if (b.full) actions.appendChild(ext(b.full, "btn primary", "Open full book PDF"));
-    var firstReal = b.ch.filter(function (c) { return !/^prelims$/i.test(c[0]); })[0];
-    if (!b.full && firstReal) actions.appendChild(ext(firstReal[1], "btn primary", "Open first chapter"));
-    if (b.zip) actions.appendChild(ext(b.zip, "btn", "Download full book (ZIP)"));
-    if (b.page) actions.appendChild(ext(b.page, "btn", b.src === "diksha" ? "Read on DIKSHA" : b.src === "mirror" ? "Source page" : "Archive page"));
-    if (!b.ch.length && !b.full) {
-      actions.appendChild(ext(dikshaSearch(b.t + " class " + b.c), "btn", "Search DIKSHA"));
-      actions.appendChild(ext(archiveSearch("NCERT " + b.t), "btn", "Search Internet Archive"));
-    }
-    body.appendChild(actions);
-
-    if (b.ch.length) {
-      var list = el("ul", "chapters");
-      b.ch.forEach(function (c, i) {
-        var li = el("li");
-        var a = ext(c[1], null, null);
-        a.appendChild(el("span", null, chapterNumber(c[0], i)));
-        a.appendChild(el("span", null, c[0]));
-        li.appendChild(a);
-        list.appendChild(li);
-      });
-      body.appendChild(list);
-    } else if (!b.full) {
-      body.appendChild(el("p", "note", "No working PDF was found for this book on DIKSHA or the Internet Archive."));
-    }
-
-    var src = el("p", "source");
-    if (b.src) src.appendChild(document.createTextNode("Direct PDFs from " + sourceName(b.src) + ". "));
-    if (b.src !== "ncert" && b.ch.some(function (c) { return c[1].indexOf("https://ncert.nic.in/") === 0; })) {
-      src.appendChild(document.createTextNode("Missing chapters added from ncert.nic.in. "));
-    }
-    if (b.off) {
-      src.appendChild(document.createTextNode("Also on "));
-      src.appendChild(ext(b.off, null, "ncert.nic.in"));
-      src.appendChild(document.createTextNode(" · code " + b.id));
-    }
-    body.appendChild(src);
-    return body;
+    text.appendChild(el("span", null, bookMeta(b, opts.showClass)));
+    if (b.replacedBy.length && !opts.noPair) text.appendChild(el("span", "pair-line", "Replaced by " + titles(b.replacedBy)));
+    a.appendChild(text);
+    var done = readCount(b), total = countable(b);
+    if (done) a.appendChild(el("span", "row-progress", done + "/" + total));
+    a.appendChild(el("span", "chev", "›"));
+    return a;
   }
 
   function groupBySubject(list) {
@@ -180,13 +203,6 @@
     order.sort(function (a, b) { return a.localeCompare(b); });
     return order.map(function (s) { return [s, groups[s].slice().sort(byMedium)]; });
   }
-
-  function classesOf(list) {
-    var seen = {};
-    list.forEach(function (b) { seen[b.c] = true; });
-    return Object.keys(seen).map(Number).sort(function (a, b) { return a - b; });
-  }
-
   function mediumRank(m) {
     var i = MAIN_MEDIUMS.indexOf(m);
     return i === -1 ? MAIN_MEDIUMS.length : i;
@@ -215,15 +231,16 @@
     });
   }
 
-  function chipRow(label, items, key, onChange) {
+  function chipRow(label, items, k, onChange) {
     var row = el("div", "chip-row");
     row.appendChild(el("span", null, label));
     items.forEach(function (name) {
       var b = el("button", "chip", name);
       b.type = "button";
-      b.setAttribute("aria-pressed", String(filters[key] === name));
+      b.setAttribute("aria-pressed", String(filters[k] === name));
       b.addEventListener("click", function () {
-        filters[key] = name;
+        filters[k] = name;
+        if (k === "m") save("ncert-lang", name === "All" ? null : name);
         [].forEach.call(row.querySelectorAll(".chip"), function (x) { x.setAttribute("aria-pressed", String(x.textContent === name)); });
         onChange();
       });
@@ -234,62 +251,123 @@
 
   function passes(b) {
     if (filters.m !== "All" && b.m !== filters.m) return false;
-    if (filters.e === "NEP 2020" && b.e !== "nep") return false;
-    if (filters.e === "Earlier" && b.e === "nep") return false;
     if (filters.s !== "All" && b.s !== filters.s) return false;
     return true;
   }
 
+  function crumbs(parts) {
+    var p = el("p", "crumbs");
+    parts.forEach(function (x, i) {
+      if (i) p.appendChild(document.createTextNode(" / "));
+      if (x[1]) p.appendChild(internal(x[1], null, x[0])); else p.appendChild(document.createTextNode(x[0]));
+    });
+    return p;
+  }
+
   /* ---------- views ---------- */
   function viewHome() {
-    app.appendChild(el("h1", null, "Every NCERT book, sorted by class"));
-    app.appendChild(el("p", "lead", "Pick a class to see its books by subject. Open a book for its chapters; each one is a direct PDF link."));
+    var mine = load("ncert-class", null);
+    var last = BY_ID[load("ncert-last", "")];
 
-    var withPdf = CURRENT.filter(function (b) { return b.ch.length; }).length;
-    var nep = CURRENT.filter(function (b) { return b.e === "nep"; }).length;
+    app.appendChild(el("h1", null, "Every NCERT book, sorted by class"));
+    app.appendChild(el("p", "lead", mine
+      ? "Welcome back. Your class and language are remembered on this device."
+      : "Pick your class to see its books. Your choice is remembered on this device, so next time you land straight on it."));
+
+    if (mine || last) {
+      var panel = el("div", "continue");
+      if (mine) {
+        var go = internal("#/class/" + mine, "continue-card");
+        go.appendChild(el("small", null, "Your class"));
+        go.appendChild(el("b", null, "Class " + mine));
+        var lang = load("ncert-lang", null);
+        go.appendChild(el("span", null, plural(inGroup(mine, "current").length, "current book") + (lang ? " · " + lang : "")));
+        panel.appendChild(go);
+      }
+      if (last) {
+        var cont = internal(bookHref(last), "continue-card");
+        cont.appendChild(el("small", null, "Continue reading"));
+        cont.appendChild(el("b", null, last.t));
+        var total = countable(last);
+        cont.appendChild(el("span", null, "Class " + last.c + " · " + (total ? readCount(last) + " of " + plural(total, "chapter") + " read" : last.s)));
+        panel.appendChild(cont);
+      }
+      if (mine) {
+        var reset = el("button", "link-btn", "Change class");
+        reset.type = "button";
+        reset.addEventListener("click", function () { save("ncert-class", null); route(); });
+        panel.appendChild(reset);
+      }
+      app.appendChild(panel);
+    }
+
+    app.appendChild(el("h2", null, "Classes"));
+    var grid = el("div", "class-grid");
+    for (var c = 1; c <= 12; c++) {
+      var tile = internal("#/class/" + c, "class-tile" + (c === mine ? " mine" : ""));
+      tile.appendChild(el("small", null, c === mine ? "Your class" : "Class"));
+      tile.appendChild(el("b", null, String(c)));
+      var oldCount = inGroup(c, "old").length;
+      tile.appendChild(el("span", null, plural(inGroup(c, "current").length, "book") + (oldCount ? " · " + oldCount + " old" : "")));
+      grid.appendChild(tile);
+    }
+    var upsc = internal("#/upsc", "class-tile alt");
+    upsc.appendChild(el("small", null, "Reading path"));
+    upsc.appendChild(el("b", null, "UPSC shelf"));
+    upsc.appendChild(el("span", null, plural(UPSC.length, "classic")));
+    grid.appendChild(upsc);
+    app.appendChild(grid);
+
     var chapters = BOOKS.reduce(function (n, b) { return n + b.ch.length; }, 0);
     var stats = el("div", "stats");
-    [[CURRENT.length, "Current textbooks"], [withPdf, "With direct PDFs"], [nep, "NEP 2020 books"], [chapters.toLocaleString("en-IN"), "Chapter PDFs"]].forEach(function (s) {
+    [[BOOKS.filter(function (b) { return b.g === "current"; }).length, "Current syllabus books"],
+     [BOOKS.filter(function (b) { return b.g === "old"; }).length, "Old syllabus books"],
+     [BOOKS.filter(function (b) { return b.g === "practice"; }).length, "Exemplars & lab manuals"],
+     [chapters.toLocaleString("en-IN"), "Chapter PDFs"]].forEach(function (s) {
       var d = el("div", "stat");
       d.appendChild(el("b", null, String(s[0])));
       d.appendChild(el("span", null, s[1]));
       stats.appendChild(d);
     });
     app.appendChild(stats);
-
-    app.appendChild(el("h2", null, "Classes"));
-    var grid = el("div", "class-grid");
-    for (var c = 1; c <= 12; c++) {
-      var count = CURRENT.filter(function (b) { return b.c === c; }).length;
-      var tile = internal("#/class/" + c, "class-tile");
-      tile.appendChild(el("small", null, "Class"));
-      tile.appendChild(el("b", null, String(c)));
-      tile.appendChild(el("span", null, plural(count, "book")));
-      grid.appendChild(tile);
-    }
-    var old = internal("#/old", "class-tile alt");
-    old.appendChild(el("small", null, "UPSC"));
-    old.appendChild(el("b", null, "Old NCERT"));
-    old.appendChild(el("span", null, plural(CLASSICS.length + REPLACED.length, "book")));
-    grid.appendChild(old);
-    app.appendChild(grid);
   }
 
-  function viewClass(c) {
-    var all = CURRENT.filter(function (b) { return b.c === c; });
-    var crumbs = el("p", "crumbs");
-    crumbs.appendChild(internal("#/", null, "Classes"));
-    crumbs.appendChild(document.createTextNode(" / Class " + c));
-    app.appendChild(crumbs);
-    app.appendChild(el("h1", null, "Class " + c));
-    var mediums = mediumsOf(all);
-    app.appendChild(el("p", "lead", plural(all.length, "book") + " in " + plural(mediums.length, "language") + "."));
+  function viewClass(c, tab) {
+    save("ncert-class", c);
+    var groups = {};
+    TABS.forEach(function (t) { groups[t[0]] = inGroup(c, t[0]); });
+    if (!groups[tab] || !groups[tab].length) tab = "current";
+    var all = groups[tab];
 
+    app.appendChild(crumbs([["Classes", "#/"], ["Class " + c]]));
+    app.appendChild(el("h1", null, "Class " + c));
+
+    var nav = el("nav", "seg");
+    nav.setAttribute("aria-label", "Syllabus");
+    TABS.forEach(function (t) {
+      if (!groups[t[0]].length) return;
+      var a = internal(tabHref(c, t[0]), null, t[1]);
+      a.appendChild(el("small", null, String(groups[t[0]].length)));
+      if (t[0] === tab) a.setAttribute("aria-current", "page");
+      nav.appendChild(a);
+    });
+    app.appendChild(nav);
+
+    if (tab === "current" && NO_NEP_YET.indexOf(c) !== -1) {
+      app.appendChild(el("p", "lead", "NCERT hasn't released new-syllabus books for Class " + c + " yet, so these are still the books schools use."));
+    } else if (tab === "current") {
+      app.appendChild(el("p", "lead", "The books schools use now (NEP 2020 series)."));
+    } else if (tab === "old") {
+      app.appendChild(el("p", "lead", "Books Class " + c + " used before NCERT changed the syllabus. Each one shows the book that replaced it."));
+    } else {
+      app.appendChild(el("p", "lead", "Exemplar problems and lab manuals for Class " + c + "."));
+    }
+
+    var mediums = mediumsOf(all);
     var subjects = ["All"].concat(groupBySubject(all).map(function (p) { return p[0]; }));
     if (subjects.indexOf(filters.s) === -1) filters.s = "All";
     var mediumChips = ["All"].concat(mediums);
     if (mediumChips.indexOf(filters.m) === -1) filters.m = "All";
-    var box = el("div", "filters");
     var results = el("div");
     var count = el("p", "count");
     function draw() {
@@ -299,29 +377,146 @@
       if (!list.length) { results.appendChild(el("p", "empty", "No books match these filters.")); return; }
       subjectBlocks(list, results);
     }
-    box.appendChild(chipRow("Language", mediumChips, "m", draw));
-    box.appendChild(chipRow("Edition", EDITIONS, "e", draw));
-    if (subjects.length > 2) box.appendChild(chipRow("Subject", subjects, "s", draw));
-    app.appendChild(box);
+    if (mediums.length > 1 || subjects.length > 2) {
+      var box = el("div", "filters");
+      if (mediums.length > 1) box.appendChild(chipRow("Language", mediumChips, "m", draw));
+      if (subjects.length > 2) box.appendChild(chipRow("Subject", subjects, "s", draw));
+      app.appendChild(box);
+    }
     app.appendChild(count);
     app.appendChild(results);
     draw();
   }
 
-  function viewOld() {
-    app.appendChild(el("h1", null, "Old NCERT books"));
-    app.appendChild(el("p", "lead", "Out-of-print classics that UPSC aspirants still use, and textbooks NCERT has retired or replaced with the NEP 2020 series."));
-    app.appendChild(el("h2", null, "UPSC classics"));
-    var box = el("div", "list");
-    CLASSICS.forEach(function (b) { box.appendChild(bookRow(b)); });
-    app.appendChild(box);
-    classesOf(REPLACED).forEach(function (c) {
-      var list = REPLACED.filter(function (b) { return b.c === c; });
-      app.appendChild(el("h2", null, "Retired Class " + c + " books"));
-      var l = el("div", "list");
-      list.forEach(function (b) { l.appendChild(bookRow(b)); });
-      app.appendChild(l);
+  function viewBook(id) {
+    var b = BY_ID[id];
+    if (!b) { app.appendChild(el("h1", null, "Book not found")); app.appendChild(internal("#/", "btn", "Back to classes")); return; }
+    save("ncert-last", b.id);
+
+    if (b.g === "upsc") app.appendChild(crumbs([["UPSC shelf", "#/upsc"], [b.t]]));
+    else app.appendChild(crumbs([["Classes", "#/"], ["Class " + b.c, "#/class/" + b.c], [GROUP_LABEL[b.g], tabHref(b.c, b.g)], [b.t]]));
+
+    var head = el("div", "book-head");
+    head.appendChild(spine(b, "spine big"));
+    var ht = el("div");
+    ht.appendChild(el("span", "badge " + b.g, GROUP_LABEL[b.g]));
+    ht.appendChild(el("h1", null, b.t));
+    ht.appendChild(el("p", "lead", bookMeta(b, true)));
+    head.appendChild(ht);
+    app.appendChild(head);
+
+    if (b.note) app.appendChild(el("p", "note", b.note));
+
+    var actions = el("div", "actions");
+    if (b.full) actions.appendChild(ext(b.full, "btn primary", "Open full book PDF"));
+    var firstReal = b.ch.filter(function (c) { return !/^prelims$/i.test(c[0]); })[0];
+    if (!b.full && firstReal) actions.appendChild(ext(firstReal[1], "btn primary", "Open first chapter"));
+    if (b.zip) actions.appendChild(ext(b.zip, "btn", "Download full book (ZIP)"));
+    if (b.page) actions.appendChild(ext(b.page, "btn", b.src === "diksha" ? "Read on DIKSHA" : b.src === "mirror" ? "Source page" : "Archive page"));
+    if (!b.ch.length && !b.full) {
+      actions.appendChild(ext(dikshaSearch(b.t + " class " + b.c), "btn", "Search DIKSHA"));
+      actions.appendChild(ext(archiveSearch("NCERT " + b.t), "btn", "Search Internet Archive"));
+    }
+    app.appendChild(actions);
+
+    if (b.replacedBy.length || b.replaces.length) {
+      var pair = el("section", "pair");
+      pair.appendChild(el("h2", null, b.replacedBy.length ? "Replaced by" : "Replaces"));
+      var pl = el("div", "list");
+      (b.replacedBy.length ? b.replacedBy : b.replaces).forEach(function (x) { pl.appendChild(bookRow(x, { noPair: true })); });
+      pair.appendChild(pl);
+      app.appendChild(pair);
+    }
+
+    if (b.ch.length) {
+      var total = countable(b);
+      var sec = el("section", "chapter-sec");
+      var h = el("div", "chapter-head");
+      h.appendChild(el("h2", null, "Chapters"));
+      var status = el("span", "progress-text");
+      h.appendChild(status);
+      sec.appendChild(h);
+      var bar = el("div", "progress");
+      var fill = el("span");
+      bar.appendChild(fill);
+      sec.appendChild(bar);
+
+      var list = el("ul", "chapters");
+      var ticks = [];
+      function refresh() {
+        var done = readCount(b);
+        status.textContent = total ? done + " of " + plural(total, "chapter") + " read" : "";
+        fill.style.width = total ? Math.round(done / total * 100) + "%" : "0";
+        ticks.forEach(function (t) { t[0].setAttribute("aria-pressed", String(readOf(b).indexOf(t[1]) !== -1)); t[2].classList.toggle("done", readOf(b).indexOf(t[1]) !== -1); });
+      }
+      b.ch.forEach(function (c, i) {
+        var li = el("li");
+        var a = ext(c[1], null, null);
+        a.appendChild(el("span", null, chapterNumber(c[0], i)));
+        a.appendChild(el("span", null, c[0]));
+        a.appendChild(el("span", "open-hint", "PDF ↗"));
+        var prelims = /^prelims$/i.test(c[0]);
+        a.addEventListener("click", function () { if (!prelims) { setRead(b, i, true); refresh(); } });
+        var tick = el("button", "tick" + (prelims ? " blank" : ""));
+        if (prelims) tick.disabled = true;
+        tick.type = "button";
+        tick.title = "Mark as read";
+        tick.setAttribute("aria-label", "Mark " + c[0] + " as read");
+        tick.addEventListener("click", function () { setRead(b, i, readOf(b).indexOf(i) === -1); refresh(); });
+        li.appendChild(tick);
+        li.appendChild(a);
+        ticks.push([tick, i, li]);
+        list.appendChild(li);
+      });
+      sec.appendChild(list);
+      sec.appendChild(el("p", "source", "Opening a chapter marks it as read. Progress is saved in this browser only."));
+      app.appendChild(sec);
+      refresh();
+    } else if (!b.full) {
+      app.appendChild(el("p", "note", "No working PDF was found for this book on DIKSHA or the Internet Archive."));
+    }
+
+    var src = el("p", "source");
+    if (b.src) src.appendChild(document.createTextNode("Direct PDFs from " + sourceName(b.src) + ". "));
+    if (b.src !== "ncert" && b.ch.some(function (c) { return c[1].indexOf("https://ncert.nic.in/") === 0; })) {
+      src.appendChild(document.createTextNode("Missing chapters added from ncert.nic.in. "));
+    }
+    if (b.off) {
+      src.appendChild(document.createTextNode("Also on "));
+      src.appendChild(ext(b.off, null, "ncert.nic.in"));
+      src.appendChild(document.createTextNode(" · code " + b.id.replace(/^(old|ex)-/, "")));
+    }
+    app.appendChild(src);
+  }
+
+  function viewUpsc() {
+    app.appendChild(el("h1", null, "UPSC shelf"));
+    app.appendChild(el("p", "lead", "Out-of-print NCERT history books that UPSC aspirants still read, in the order they are usually read."));
+    var ol = el("ol", "steps");
+    UPSC_PATH.forEach(function (step) {
+      var li = el("li");
+      li.appendChild(el("h2", null, step.t));
+      if (step.d) li.appendChild(el("p", "lead", step.d));
+      var box = el("div", "list");
+      step.ids.forEach(function (id) { if (BY_ID[id]) box.appendChild(bookRow(BY_ID[id], { showClass: true })); });
+      li.appendChild(box);
+      ol.appendChild(li);
     });
+    app.appendChild(ol);
+
+    app.appendChild(el("h2", null, "Old school textbooks"));
+    app.appendChild(el("p", "lead", "Many aspirants also read the pre-2024 school books. They are in each class's Old syllabus tab."));
+    var grid = el("div", "class-grid");
+    for (var c = 1; c <= 12; c++) {
+      var n = inGroup(c, "old").length;
+      if (!n) continue;
+      var tile = internal(tabHref(c, "old"), "class-tile");
+      tile.appendChild(el("small", null, "Class"));
+      tile.appendChild(el("b", null, String(c)));
+      tile.appendChild(el("span", null, plural(n, "old book")));
+      grid.appendChild(tile);
+    }
+    app.appendChild(grid);
   }
 
   function cards(items) {
@@ -340,14 +535,21 @@
   }
 
   function viewMore() {
-    app.appendChild(el("h1", null, "Exemplars, papers & resources"));
+    app.appendChild(el("h1", null, "Papers & resources"));
     app.appendChild(el("p", "lead", "Practice material and official documents that go with the textbooks."));
-    classesOf(PRACTICE_BOOKS).forEach(function (c) {
-      app.appendChild(el("h2", null, "Class " + c + " exemplars & lab manuals"));
-      var l = el("div", "list");
-      PRACTICE_BOOKS.filter(function (b) { return b.c === c; }).forEach(function (b) { l.appendChild(bookRow(b)); });
-      app.appendChild(l);
-    });
+    app.appendChild(el("h2", null, "Exemplars & lab manuals"));
+    app.appendChild(el("p", "lead", "These are now in each class's Practice tab."));
+    var grid = el("div", "class-grid");
+    for (var c = 1; c <= 12; c++) {
+      var n = inGroup(c, "practice").length;
+      if (!n) continue;
+      var tile = internal(tabHref(c, "practice"), "class-tile");
+      tile.appendChild(el("small", null, "Class"));
+      tile.appendChild(el("b", null, String(c)));
+      tile.appendChild(el("span", null, plural(n, "book")));
+      grid.appendChild(tile);
+    }
+    app.appendChild(grid);
     app.appendChild(el("h2", null, "Practice"));
     app.appendChild(cards(PRACTICE));
     app.appendChild(el("h2", null, "Resources"));
@@ -358,7 +560,7 @@
     app.appendChild(el("h1", null, "Search"));
     var words = q.toLowerCase().split(/\s+/).filter(Boolean);
     var hits = BOOKS.filter(function (b) {
-      var hay = [b.t, b.s, b.m, b.id, b.by || "", "class " + b.c, b.e === "nep" ? "nep 2020" : "", b.e === "classic" || b.e === "replaced" ? "old ncert" : ""].join(" ").toLowerCase();
+      var hay = [b.t, b.s, b.m, b.id, b.by || "", "class " + b.c, GROUP_LABEL[b.g], b.e === "nep" ? "nep 2020" : "", b.g === "old" || b.g === "upsc" ? "old ncert" : "", b.g === "upsc" ? "upsc" : ""].join(" ").toLowerCase();
       return words.every(function (w) { return hay.indexOf(w) !== -1; });
     });
     app.appendChild(el("p", "lead", plural(hits.length, "book") + " for “" + q + "”"));
@@ -368,7 +570,7 @@
       if (!list.length) continue;
       app.appendChild(el("h2", null, "Class " + c));
       var box = el("div", "list");
-      list.forEach(function (b) { box.appendChild(bookRow(b)); });
+      list.forEach(function (b) { box.appendChild(bookRow(b, { tag: true })); });
       app.appendChild(box);
     }
   }
@@ -378,9 +580,11 @@
     var hash = decodeURIComponent(location.hash.replace(/^#\/?/, ""));
     var parts = hash.split("/");
     var name = "home";
+    if (parts[0] === "old") { location.replace("#/upsc"); return; }
     app.textContent = "";
-    if (parts[0] === "class" && +parts[1] >= 1 && +parts[1] <= 12) { name = "class"; viewClass(+parts[1]); }
-    else if (parts[0] === "old") { name = "old"; viewOld(); }
+    if (parts[0] === "class" && +parts[1] >= 1 && +parts[1] <= 12) { name = "class"; viewClass(+parts[1], parts[2] || "current"); }
+    else if (parts[0] === "book" && parts[1]) { name = "book"; viewBook(parts.slice(1).join("/")); }
+    else if (parts[0] === "upsc") { name = "upsc"; viewUpsc(); }
     else if (parts[0] === "more") { name = "more"; viewMore(); }
     else if (parts[0] === "search" && parts.slice(1).join("/").trim()) {
       name = "search";
@@ -390,8 +594,15 @@
     }
     else viewHome();
 
-    [].forEach.call(document.querySelectorAll(".tabs a"), function (a) {
-      var current = a.dataset.route === name || (a.dataset.route === "home" && name === "class");
+    var mine = load("ncert-class", null);
+    var myClass = document.getElementById("myClassLink");
+    if (myClass) myClass.href = mine ? "#/class/" + mine : "#/";
+    var onMine = name === "class" && mine && location.hash.indexOf("#/class/" + mine) === 0;
+    [].forEach.call(document.querySelectorAll("[data-route]"), function (a) {
+      var r = a.dataset.route;
+      var current = r === name || (r === "home" && (name === "class" || name === "book"));
+      if (r === "mine") current = !!onMine;
+      else if (r === "home" && onMine && a.closest(".bottom-nav")) current = false;
       if (current) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current");
     });
     if (name !== "search") searchInput.value = "";
