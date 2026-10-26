@@ -546,47 +546,60 @@ h2 { font-size: 19px; font-weight: 800; letter-spacing: -0.015em; line-height: 1
 }
 .seg button:hover { color: var(--ink); }
 .seg button[aria-pressed="true"] { background: var(--surface); color: var(--ink); outline: 1px solid var(--line); }
-.upsc-hero {
-  display: flex; gap: 14px; align-items: flex-start; padding: 18px; margin: 0 0 14px;
-  background: var(--surface); border: 1px solid var(--line); border-radius: 22px;
+.uhero {
+  position: relative; overflow: hidden; padding: 18px; margin: 0 0 16px; color: #fff; border-radius: 24px;
+  background: linear-gradient(150deg, color-mix(in srgb, var(--c) 82%, #fff), var(--c) 60%, color-mix(in srgb, var(--c) 70%, #000));
 }
-.upsc-hero .section-mark { flex: none; width: 56px; height: 56px; padding: 14px; margin: 0; }
-.upsc-hero h1 { margin: 2px 0 4px; }
-.upsc-hero .lead { margin: 0 0 10px; font-size: 14px; }
-.upath { list-style: none; margin: 0; padding: 0; }
-.ustep { position: relative; display: flex; gap: 14px; padding-bottom: 22px; }
-.ustep::before {
-  content: ""; position: absolute; left: 17px; top: 40px; bottom: 4px; width: 2px; border-radius: 2px;
-  background: var(--line);
+.uhero-bg { position: absolute; right: -22px; top: -14px; width: 150px; height: 150px; opacity: 0.16; }
+.uhero-kicker { position: relative; font-size: 12px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; opacity: 0.85; }
+.uhero h1 { position: relative; margin: 4px 0; font-size: 26px; color: #fff; }
+.uhero p { position: relative; max-width: 32ch; margin: 0 0 14px; font-size: 14px; color: rgba(255, 255, 255, 0.88); }
+.uhero-seg { position: relative; display: inline-flex; gap: 4px; padding: 4px; border-radius: 14px; background: rgba(0, 0, 0, 0.18); }
+.uhero-seg button {
+  font: inherit; font-size: 14px; font-weight: 700; color: rgba(255, 255, 255, 0.88); cursor: pointer;
+  padding: 8px 14px; border: 0; border-radius: 10px; background: transparent;
 }
-.ustep:last-child::before { display: none; }
-.ustep-num {
-  position: relative; flex: none; width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center;
-  font-weight: 800; font-size: 14px; color: #fff; background: #e11d48;
+.uhero-seg button[aria-pressed="true"] { color: var(--c); background: #fff; }
+.uhero-seg small { margin-left: 6px; font-size: 12px; font-weight: 700; opacity: 0.7; }
+
+.ucover { min-width: 0; display: grid; gap: 1px; text-decoration: none; color: var(--ink); }
+.ucover-face {
+  position: relative; overflow: hidden; display: flex; flex-direction: column; aspect-ratio: 4 / 5;
+  padding: 12px 12px 12px 18px; margin-bottom: 8px; color: #fff; border-radius: 6px 16px 16px 6px;
+  background: linear-gradient(160deg, color-mix(in srgb, var(--c) 78%, #fff), var(--c) 55%, color-mix(in srgb, var(--c) 65%, #000));
+  box-shadow: inset 6px 0 0 rgba(0, 0, 0, 0.16), 0 8px 18px -10px var(--c);
+  transition: transform 0.15s;
 }
-.ustep-body { flex: 1; min-width: 0; }
-.ustep-body h2 { margin: 5px 0 2px; font-size: 18px; }
-.ustep-d { margin: 0 0 10px; font-size: 13.5px; color: var(--muted); }
-.ubooks { display: grid; gap: 8px; }
-@media (min-width: 720px) { .ubooks { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-.ubook {
-  display: flex; align-items: center; gap: 8px; padding: 8px 10px 8px 8px;
-  background: var(--surface); border: 1px solid var(--line); border-radius: 18px;
+.ucover:active .ucover-face { transform: scale(0.98); }
+.ucover-era { font-size: 10.5px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; opacity: 0.85; }
+.ucover-face strong { margin-top: 6px; font-size: 19px; font-weight: 800; line-height: 1.15; }
+.ucover-year {
+  margin-top: auto; align-self: flex-start; padding: 3px 8px; border-radius: 999px;
+  font-size: 11.5px; font-weight: 700; background: rgba(0, 0, 0, 0.18);
 }
-.ubook:hover { border-color: color-mix(in srgb, #e11d48 40%, var(--line)); }
-.ubook-main { flex: 1; min-width: 0; display: flex; align-items: center; gap: 12px; text-decoration: none; }
-.ubook-cover {
-  flex: none; display: grid; place-items: center; width: 46px; height: 60px; border-radius: 6px 12px 12px 6px;
-  color: #e11d48; background: color-mix(in srgb, #e11d48 12%, var(--surface));
-  border-left: 4px solid color-mix(in srgb, #e11d48 45%, var(--surface));
+.ucover-ic { position: absolute; right: 10px; bottom: 10px; width: 30px; height: 30px; opacity: 0.45; }
+.ucover-sub { font-size: 12.5px; font-weight: 600; color: var(--muted); }
+
+.uera-tabs { display: flex; gap: 8px; overflow-x: auto; margin: 0 -14px 14px; padding: 0 14px 2px; scrollbar-width: none; }
+.uera-tabs::-webkit-scrollbar { display: none; }
+.uera-tab {
+  flex: none; display: flex; align-items: center; gap: 8px; padding: 7px 14px 7px 7px; cursor: pointer;
+  font: inherit; font-size: 14px; font-weight: 700; color: var(--ink);
+  background: var(--surface); border: 1px solid var(--line); border-radius: 999px;
 }
-.ubook-cover .ic { width: 22px; height: 22px; }
-[data-theme="dark"] .ubook-cover { color: #fb7185; background: color-mix(in srgb, #e11d48 22%, var(--surface)); }
-.ubook-text { min-width: 0; display: grid; gap: 1px; }
-.ubook-text strong { font-size: 15px; font-weight: 800; line-height: 1.25; }
-.ubook-by { font-size: 13px; font-weight: 600; color: var(--ink); opacity: 0.85; }
-.ubook-sub { font-size: 12px; color: var(--muted); }
-.ubook-read { flex: none; }
+.uera-tab .n {
+  width: 24px; height: 24px; display: grid; place-items: center; border-radius: 50%; font-size: 12px; font-weight: 800;
+  color: var(--c); background: color-mix(in srgb, var(--c) 14%, var(--surface));
+}
+.uera-tab[aria-pressed="true"] { color: #fff; border-color: var(--c); background: var(--c); }
+.uera-tab[aria-pressed="true"] .n { color: var(--c); background: #fff; }
+.uera-t { margin: 0 0 2px; font-size: 20px; }
+.uera-d { margin: 0 0 14px; font-size: 14px; color: var(--muted); }
+.ucovers { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px 12px; }
+@media (min-width: 720px) { .ucovers { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+.ucell { min-width: 0; display: grid; gap: 8px; align-content: start; }
+.ucell-read { justify-self: start; }
+
 .upsc-old { margin-top: 10px; padding: 18px; background: var(--surface); border: 1px solid var(--line); border-radius: 22px; }
 .upsc-old h2 { margin: 0 0 4px; }
 .upsc-old .lead { font-size: 14px; }
