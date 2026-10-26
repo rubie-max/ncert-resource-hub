@@ -17,6 +17,7 @@
   var CURRENT = BOOKS.filter(function (b) { return b.e === "nep" || b.e === "old"; });
   var CLASSICS = BOOKS.filter(function (b) { return b.e === "classic"; });
   var REPLACED = BOOKS.filter(function (b) { return b.e === "replaced"; });
+  var PRACTICE_BOOKS = BOOKS.filter(function (b) { return b.e === "practice"; });
 
   var PRACTICE = [
     { t: "NCERT Exemplar Problems", d: "Extra questions with answers for Maths and Science, Classes 6–12.",
@@ -93,7 +94,7 @@
   function bookMeta(b) {
     var bits = [];
     if (b.by) bits.push(b.by);
-    if (b.e === "classic" || b.e === "replaced") bits.push("Class " + b.c);
+    if (b.e === "classic" || b.e === "replaced" || b.e === "practice") bits.push("Class " + b.c);
     if (b.m && b.m !== b.s) bits.push(b.m);
     if (b.full) bits.push("Full book PDF");
     else if (b.ch.length) bits.push(plural(b.ch.length, "file"));
@@ -177,6 +178,12 @@
     });
     order.sort(function (a, b) { return a.localeCompare(b); });
     return order.map(function (s) { return [s, groups[s].slice().sort(byMedium)]; });
+  }
+
+  function classesOf(list) {
+    var seen = {};
+    list.forEach(function (b) { seen[b.c] = true; });
+    return Object.keys(seen).map(Number).sort(function (a, b) { return a - b; });
   }
 
   function mediumRank(m) {
@@ -302,14 +309,14 @@
 
   function viewOld() {
     app.appendChild(el("h1", null, "Old NCERT books"));
-    app.appendChild(el("p", "lead", "Out-of-print classics that UPSC aspirants still use, and the books replaced by the NEP 2020 series. All open from the Internet Archive."));
+    app.appendChild(el("p", "lead", "Out-of-print classics that UPSC aspirants still use, and textbooks NCERT has retired or replaced with the NEP 2020 series."));
     app.appendChild(el("h2", null, "UPSC classics"));
     var box = el("div", "list");
     CLASSICS.forEach(function (b) { box.appendChild(bookRow(b)); });
     app.appendChild(box);
-    [6, 7, 9].forEach(function (c) {
+    classesOf(REPLACED).forEach(function (c) {
       var list = REPLACED.filter(function (b) { return b.c === c; });
-      app.appendChild(el("h2", null, "Replaced Class " + c + " books"));
+      app.appendChild(el("h2", null, "Retired Class " + c + " books"));
       var l = el("div", "list");
       list.forEach(function (b) { l.appendChild(bookRow(b)); });
       app.appendChild(l);
@@ -334,6 +341,12 @@
   function viewMore() {
     app.appendChild(el("h1", null, "Exemplars, papers & resources"));
     app.appendChild(el("p", "lead", "Practice material and official documents that go with the textbooks."));
+    classesOf(PRACTICE_BOOKS).forEach(function (c) {
+      app.appendChild(el("h2", null, "Class " + c + " exemplars & lab manuals"));
+      var l = el("div", "list");
+      PRACTICE_BOOKS.filter(function (b) { return b.c === c; }).forEach(function (b) { l.appendChild(bookRow(b)); });
+      app.appendChild(l);
+    });
     app.appendChild(el("h2", null, "Practice"));
     app.appendChild(cards(PRACTICE));
     app.appendChild(el("h2", null, "Resources"));
