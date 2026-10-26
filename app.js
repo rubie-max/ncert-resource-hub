@@ -38,8 +38,8 @@
       links: [["CBSE Academic", "https://cbseacademic.nic.in/"]] },
     { t: "Previous Year Papers", d: "Official CBSE board question papers.",
       links: [["CBSE question papers", "https://www.cbse.gov.in/cbsenew/question-paper.html"]] },
-    { t: "NCERT Solutions", tag: "Independent websites", d: "Free step-by-step answers. Check them against the textbook.",
-      links: [["LearnCBSE", "https://www.learncbse.in/"], ["Tiwari Academy", "https://www.tiwariacademy.com/"]] }
+    { t: "NCERT Solutions", tag: "Independent websites", d: "Chapter answers for English and Hindi books are also on each book's page. Check them against the textbook.",
+      links: [["Tiwari Academy", "https://www.tiwariacademy.com/ncert-solutions/"], ["LearnCBSE", "https://www.learncbse.in/"]] }
   ];
   var RESOURCES = [
     { t: "DIKSHA", d: "The government's digital platform with every NCERT book, QR-linked lessons and courses.",
@@ -109,7 +109,12 @@
 
   var app = document.getElementById("app");
   var searchInput = document.getElementById("q");
-  var filters = { m: load("ncert-lang", "All"), s: "All" };
+  var filters = { m: load("ncert-lang", "English"), s: "All" };
+  var BANDS = [
+    ["Primary", "Classes 1–5", [1, 2, 3, 4, 5]],
+    ["Middle", "Classes 6–8", [6, 7, 8]],
+    ["Secondary", "Classes 9–12", [9, 10, 11, 12]]
+  ];
 
   function dikshaSearch(q) { return "https://diksha.gov.in/search?key=" + encodeURIComponent(q); }
   function archiveSearch(q) { return "https://archive.org/search?query=" + encodeURIComponent(q); }
@@ -154,6 +159,11 @@
     s.setAttribute("aria-hidden", "true");
     return s;
   }
+  function solUrl(b, path) {
+    if (!b.sol) return "";
+    var host = b.sol.h === "h" ? "hindi" : "www";
+    return "https://" + host + ".tiwariacademy.com/ncert-solutions/" + b.sol.p + (path || "");
+  }
   function bookHref(b) { return "#/book/" + encodeURIComponent(b.id); }
   function tabHref(c, g) {
     for (var i = 0; i < TABS.length; i++) if (TABS[i][0] === g) return "#/class/" + c + TABS[i][2];
@@ -173,6 +183,7 @@
     if (b.m && b.m !== b.s) bits.push(b.m);
     if (b.full) bits.push("Full book PDF");
     else if (b.ch.length) bits.push(plural(countable(b) || b.ch.length, "chapter"));
+    if (b.sol) bits.push(b.sol.c ? "Chapter solutions" : "Solutions");
     return bits.join(" · ");
   }
 
@@ -183,6 +194,7 @@
     var text = el("span", "book-text");
     var title = el("strong", null, b.t);
     if (opts.tag) title.appendChild(el("span", "badge " + b.g, GROUP_LABEL[b.g]));
+    if (b.sol) title.appendChild(el("span", "badge sol", "Solutions"));
     if (!b.ch.length && !b.full) title.appendChild(el("span", "badge none", "No PDF yet"));
     text.appendChild(title);
     text.appendChild(el("span", null, bookMeta(b, opts.showClass)));
@@ -240,7 +252,7 @@
       b.setAttribute("aria-pressed", String(filters[k] === name));
       b.addEventListener("click", function () {
         filters[k] = name;
-        if (k === "m") save("ncert-lang", name === "All" ? null : name);
+        if (k === "m") save("ncert-lang", name);
         [].forEach.call(row.querySelectorAll(".chip"), function (x) { x.setAttribute("aria-pressed", String(x.textContent === name)); });
         onChange();
       });
@@ -269,10 +281,10 @@
     var mine = load("ncert-class", null);
     var last = BY_ID[load("ncert-last", "")];
 
-    app.appendChild(el("h1", null, "Every NCERT book, sorted by class"));
+    app.appendChild(el("h1", null, "Every NCERT book, one place"));
     app.appendChild(el("p", "lead", mine
-      ? "Welcome back. Your class and language are remembered on this device."
-      : "Pick your class to see its books. Your choice is remembered on this device, so next time you land straight on it."));
+      ? "Welcome back. Your class and language stay on this device."
+      : "Open a class, pick a book, then read the chapter PDF or its solutions. Your class is remembered on this device."));
 
     if (mine || last) {
       var panel = el("div", "continue");
@@ -301,27 +313,41 @@
       app.appendChild(panel);
     }
 
-    app.appendChild(el("h2", null, "Classes"));
-    var grid = el("div", "class-grid");
-    for (var c = 1; c <= 12; c++) {
-      var tile = internal("#/class/" + c, "class-tile" + (c === mine ? " mine" : ""));
-      tile.appendChild(el("small", null, c === mine ? "Your class" : "Class"));
-      tile.appendChild(el("b", null, String(c)));
-      var oldCount = inGroup(c, "old").length;
-      tile.appendChild(el("span", null, plural(inGroup(c, "current").length, "book") + (oldCount ? " · " + oldCount + " old" : "")));
-      grid.appendChild(tile);
-    }
+    BANDS.forEach(function (band) {
+      var head = el("div", "band-head");
+      head.appendChild(el("h2", null, band[0]));
+      head.appendChild(el("p", "lead", band[1]));
+      app.appendChild(head);
+      var grid = el("div", "class-grid");
+      band[2].forEach(function (c) {
+        var tile = internal("#/class/" + c, "class-tile" + (c === mine ? " mine" : ""));
+        tile.appendChild(el("small", null, c === mine ? "Your class" : "Class"));
+        tile.appendChild(el("b", null, String(c)));
+        var oldCount = inGroup(c, "old").length;
+        var solCount = inGroup(c, "current").filter(function (b) { return b.sol; }).length;
+        tile.appendChild(el("span", null, plural(inGroup(c, "current").length, "book") + (solCount ? " · " + solCount + " with solutions" : "") + (oldCount ? " · " + oldCount + " old" : "")));
+        grid.appendChild(tile);
+      });
+      app.appendChild(grid);
+    });
+    var extra = el("div", "class-grid extras");
     var upsc = internal("#/upsc", "class-tile alt");
     upsc.appendChild(el("small", null, "Reading path"));
     upsc.appendChild(el("b", null, "UPSC shelf"));
     upsc.appendChild(el("span", null, plural(UPSC.length, "classic")));
-    grid.appendChild(upsc);
-    app.appendChild(grid);
+    extra.appendChild(upsc);
+    var more = internal("#/more", "class-tile");
+    more.appendChild(el("small", null, "Practice"));
+    more.appendChild(el("b", null, "Papers"));
+    more.appendChild(el("span", null, "Sample papers, exemplars, official sites"));
+    extra.appendChild(more);
+    app.appendChild(extra);
 
     var chapters = BOOKS.reduce(function (n, b) { return n + b.ch.length; }, 0);
+    var withSol = BOOKS.filter(function (b) { return b.sol; }).length;
     var stats = el("div", "stats");
     [[BOOKS.filter(function (b) { return b.g === "current"; }).length, "Current syllabus books"],
-     [BOOKS.filter(function (b) { return b.g === "old"; }).length, "Old syllabus books"],
+     [withSol, "Books with solutions"],
      [BOOKS.filter(function (b) { return b.g === "practice"; }).length, "Exemplars & lab manuals"],
      [chapters.toLocaleString("en-IN"), "Chapter PDFs"]].forEach(function (s) {
       var d = el("div", "stat");
@@ -367,7 +393,7 @@
     var subjects = ["All"].concat(groupBySubject(all).map(function (p) { return p[0]; }));
     if (subjects.indexOf(filters.s) === -1) filters.s = "All";
     var mediumChips = ["All"].concat(mediums);
-    if (mediumChips.indexOf(filters.m) === -1) filters.m = "All";
+    if (mediumChips.indexOf(filters.m) === -1) filters.m = mediums[0] || "All";
     var results = el("div");
     var count = el("p", "count");
     function draw() {
@@ -413,6 +439,7 @@
     if (!b.full && firstReal) actions.appendChild(ext(firstReal[1], "btn primary", "Open first chapter"));
     if (b.zip) actions.appendChild(ext(b.zip, "btn", "Download full book (ZIP)"));
     if (b.page) actions.appendChild(ext(b.page, "btn", b.src === "diksha" ? "Read on DIKSHA" : b.src === "mirror" ? "Source page" : "Archive page"));
+    if (b.sol) actions.appendChild(ext(solUrl(b), "btn sol", b.sol.c ? "All solutions" : "Solutions"));
     if (!b.ch.length && !b.full) {
       actions.appendChild(ext(dikshaSearch(b.t + " class " + b.c), "btn", "Search DIKSHA"));
       actions.appendChild(ext(archiveSearch("NCERT " + b.t), "btn", "Search Internet Archive"));
@@ -454,7 +481,7 @@
         var a = ext(c[1], null, null);
         a.appendChild(el("span", null, chapterNumber(c[0], i)));
         a.appendChild(el("span", null, c[0]));
-        a.appendChild(el("span", "open-hint", "PDF ↗"));
+        a.appendChild(el("span", "open-hint", "PDF"));
         var prelims = /^prelims$/i.test(c[0]);
         a.addEventListener("click", function () { if (!prelims) { setRead(b, i, true); refresh(); } });
         var tick = el("button", "tick" + (prelims ? " blank" : ""));
@@ -465,11 +492,14 @@
         tick.addEventListener("click", function () { setRead(b, i, readOf(b).indexOf(i) === -1); refresh(); });
         li.appendChild(tick);
         li.appendChild(a);
+        if (b.sol && b.sol.c && b.sol.c[String(i)]) {
+          li.appendChild(ext(solUrl(b, b.sol.c[String(i)]), "sol-link", "Solve"));
+        }
         ticks.push([tick, i, li]);
         list.appendChild(li);
       });
       sec.appendChild(list);
-      sec.appendChild(el("p", "source", "Opening a chapter marks it as read. Progress is saved in this browser only."));
+      sec.appendChild(el("p", "source", "Opening a chapter marks it as read. Progress stays in this browser. Solutions open on Tiwari Academy, an independent site — check them against the textbook."));
       app.appendChild(sec);
       refresh();
     } else if (!b.full) {
@@ -560,7 +590,7 @@
     app.appendChild(el("h1", null, "Search"));
     var words = q.toLowerCase().split(/\s+/).filter(Boolean);
     var hits = BOOKS.filter(function (b) {
-      var hay = [b.t, b.s, b.m, b.id, b.by || "", "class " + b.c, GROUP_LABEL[b.g], b.e === "nep" ? "nep 2020" : "", b.g === "old" || b.g === "upsc" ? "old ncert" : "", b.g === "upsc" ? "upsc" : ""].join(" ").toLowerCase();
+      var hay = [b.t, b.s, b.m, b.id, b.by || "", "class " + b.c, GROUP_LABEL[b.g], b.e === "nep" ? "nep 2020" : "", b.g === "old" || b.g === "upsc" ? "old ncert" : "", b.g === "upsc" ? "upsc" : "", b.sol ? "solutions" : ""].join(" ").toLowerCase();
       return words.every(function (w) { return hay.indexOf(w) !== -1; });
     });
     app.appendChild(el("p", "lead", plural(hits.length, "book") + " for “" + q + "”"));
