@@ -16,7 +16,13 @@
     "History": "Social Science", "Geography": "Social Science", "Political Science": "Social Science", "Economics": "Social Science",
     "Environmental Studies": "EVS", "The World Around Us": "EVS"
   };
-  var TABS = [["current", "Books", ""], ["old", "Old", "/old"], ["practice", "Practice", "/practice"]];
+  var TABS = [["current", "Current syllabus", ""], ["old", "Old syllabus", "/old"]];
+  var SECTIONS = [
+    { k: "books", t: "NCERT Books", d: "Textbooks, Class 1–12", mark: "B", color: "#0d7a72" },
+    { k: "solutions", t: "Solutions", d: "Chapter-wise answers", mark: "S", color: "#2563eb" },
+    { k: "exemplar", t: "Exemplar", d: "Extra questions & lab manuals", mark: "E", color: "#7c3aed" },
+    { k: "upsc", t: "UPSC", d: "Old NCERT history classics", mark: "U", color: "#b45309" }
+  ];
   var GROUP_LABEL = { current: "Current syllabus", old: "Old syllabus", practice: "Practice", upsc: "UPSC classic" };
   var NO_NEP_YET = [10, 11, 12];
 
@@ -30,10 +36,6 @@
   ];
 
   var PRACTICE = [
-    { t: "NCERT Exemplar Problems", d: "Extra questions with answers for Maths and Science, Classes 6–12.",
-      links: [["Exemplars on DIKSHA", dikshaSearch("NCERT exemplar")], ["Find on Internet Archive", archiveSearch("NCERT exemplar problems")]] },
-    { t: "Lab Manuals", d: "NCERT laboratory manuals for Science, Physics, Chemistry, Biology and Maths.",
-      links: [["Search DIKSHA", dikshaSearch("NCERT laboratory manual")], ["Find on Internet Archive", archiveSearch("NCERT laboratory manual")]] },
     { t: "CBSE Sample Papers", d: "Official sample question papers and marking schemes for Classes 10 and 12.",
       links: [["CBSE Academic", "https://cbseacademic.nic.in/"]] },
     { t: "Previous Year Papers", d: "Official CBSE board question papers.",
@@ -166,6 +168,7 @@
   }
   function bookHref(b) { return "#/book/" + encodeURIComponent(b.id); }
   function tabHref(c, g) {
+    if (g === "practice") return "#/exemplar/" + c;
     for (var i = 0; i < TABS.length; i++) if (TABS[i][0] === g) return "#/class/" + c + TABS[i][2];
     return "#/class/" + c;
   }
@@ -292,61 +295,77 @@
   }
 
   /* ---------- views ---------- */
+  var SECTION_BOOKS = {
+    books: function (c) { return inGroup(c, "current").length + inGroup(c, "old").length; },
+    solutions: function (c) { return solutionBooks(c).length; },
+    exemplar: function (c) { return inGroup(c, "practice").length; }
+  };
+  function solutionBooks(c) { return BOOKS.filter(function (b) { return b.c === c && b.sol && b.g !== "upsc"; }); }
+  function sectionOf(k) { for (var i = 0; i < SECTIONS.length; i++) if (SECTIONS[i].k === k) return SECTIONS[i]; }
+  function sectionClassHref(k, c) { return k === "books" ? "#/class/" + c : "#/" + k + "/" + c; }
+  function classesIn(k) {
+    var out = [];
+    for (var c = 1; c <= 12; c++) if (SECTION_BOOKS[k](c)) out.push(c);
+    return out;
+  }
+  var backTo = null;
+
   function viewHome() {
-    var mine = load("ncert-class", null);
     var last = BY_ID[load("ncert-last", "")];
-
-    app.appendChild(el("h1", null, "Pick your class"));
-    if (last) {
-      var cont = internal(bookHref(last), "continue-card");
-      cont.appendChild(el("small", null, "Continue"));
-      cont.appendChild(el("b", null, last.t));
-      var total = countable(last);
-      cont.appendChild(el("span", null, "Class " + last.c + (total ? " · " + readCount(last) + "/" + total : "")));
-      app.appendChild(cont);
-    }
-
-    var grid = el("div", "class-pad");
-    for (var c = 1; c <= 12; c++) {
-      var tile = internal("#/class/" + c, "class-num" + (c === mine ? " mine" : ""));
-      tile.appendChild(el("b", null, String(c)));
-      grid.appendChild(tile);
-    }
+    app.appendChild(el("h1", null, "NCERT Library"));
+    var grid = el("div", "sections");
+    SECTIONS.forEach(function (s) {
+      var a = internal("#/" + s.k, "section-card");
+      var mark = el("span", "section-mark", s.mark);
+      mark.style.background = s.color;
+      mark.setAttribute("aria-hidden", "true");
+      a.appendChild(mark);
+      a.appendChild(el("b", null, s.t));
+      a.appendChild(el("span", null, s.d));
+      grid.appendChild(a);
+    });
     app.appendChild(grid);
 
-    var extras = el("div", "home-links");
-    extras.appendChild(internal("#/upsc", "home-link", "UPSC books"));
-    extras.appendChild(internal("#/more", "home-link", "Papers & resources"));
-    app.appendChild(extras);
+    if (last) {
+      var cont = internal(bookHref(last), "continue-card");
+      cont.appendChild(el("small", null, "Continue reading"));
+      cont.appendChild(el("b", null, last.t));
+      var total = countable(last);
+      cont.appendChild(el("span", null, "Class " + last.c + (total ? " · " + readCount(last) + "/" + total + " read" : "")));
+      app.appendChild(cont);
+    }
+    app.appendChild(internal("#/more", "home-link", "Sample papers & resources"));
   }
 
-  function viewClass(c, tab) {
-    save("ncert-class", c);
-    var groups = {};
-    TABS.forEach(function (t) { groups[t[0]] = inGroup(c, t[0]); });
-    if (!groups[tab] || !groups[tab].length) tab = "current";
-    var all = groups[tab];
+  function viewSection(k) {
+    var s = sectionOf(k);
+    var mine = load("ncert-class", null);
+    app.appendChild(internal("#/", "back", "← Home"));
+    app.appendChild(el("h1", null, s.t));
+    app.appendChild(el("p", "lead", k === "solutions" ? "Pick your class. Answers open on Tiwari Academy, an independent site." : "Pick your class."));
+    var grid = el("div", "class-pad");
+    classesIn(k).forEach(function (c) {
+      var tile = internal(sectionClassHref(k, c), "class-num" + (c === mine ? " mine" : ""));
+      tile.appendChild(el("small", null, "Class"));
+      tile.appendChild(el("b", null, String(c)));
+      grid.appendChild(tile);
+    });
+    app.appendChild(grid);
+  }
 
-    app.appendChild(internal("#/", "back", "← Classes"));
-    app.appendChild(el("h1", null, "Class " + c));
-
-    var nav = el("nav", "seg");
-    nav.setAttribute("aria-label", "Syllabus");
-    TABS.forEach(function (t) {
-      if (!groups[t[0]].length) return;
-      var a = internal(tabHref(c, t[0]), null, t[1]);
-      a.appendChild(el("small", null, String(groups[t[0]].length)));
-      if (t[0] === tab) a.setAttribute("aria-current", "page");
+  function classStrip(k, current) {
+    var nav = el("nav", "class-strip");
+    nav.setAttribute("aria-label", "Change class");
+    classesIn(k).forEach(function (c) {
+      var a = internal(sectionClassHref(k, c), null, String(c));
+      a.setAttribute("aria-label", "Class " + c);
+      if (c === current) a.setAttribute("aria-current", "page");
       nav.appendChild(a);
     });
-    app.appendChild(nav);
+    return nav;
+  }
 
-    if (tab === "current" && NO_NEP_YET.indexOf(c) !== -1) {
-      app.appendChild(el("p", "lead", "No new-syllabus books yet. These are the books schools use."));
-    } else if (tab === "old") {
-      app.appendChild(el("p", "lead", "Older books this class used before the syllabus changed."));
-    }
-
+  function bookList(all) {
     var mediums = mediumsOf(all);
     var subjects = ["All"].concat(groupBySubject(all).map(function (p) { return p[0]; }));
     if (subjects.indexOf(filters.s) === -1) filters.s = "All";
@@ -372,13 +391,63 @@
     draw();
   }
 
+  function classHeader(k, c) {
+    save("ncert-class", c);
+    var s = sectionOf(k);
+    backTo = { href: location.hash, label: "Class " + c + " " + (k === "books" ? "books" : s.t.toLowerCase()), k: k, c: c };
+    app.appendChild(internal("#/" + k, "back", "← " + s.t));
+    app.appendChild(el("h1", null, "Class " + c + " " + (k === "books" ? "books" : s.t.toLowerCase())));
+    var strip = classStrip(k, c);
+    app.appendChild(strip);
+    var cur = strip.querySelector("[aria-current]");
+    if (cur) strip.scrollLeft = cur.offsetLeft - strip.offsetLeft - (strip.clientWidth - cur.offsetWidth) / 2;
+  }
+
+  function viewClass(c, tab) {
+    var groups = {};
+    TABS.forEach(function (t) { groups[t[0]] = inGroup(c, t[0]); });
+    if (!groups[tab] || !groups[tab].length) tab = "current";
+    classHeader("books", c);
+    backTo.label = "Class " + c + (tab === "old" ? " old syllabus" : "");
+
+    var nav = el("nav", "seg");
+    nav.setAttribute("aria-label", "Syllabus");
+    TABS.forEach(function (t) {
+      if (!groups[t[0]].length) return;
+      var a = internal(tabHref(c, t[0]), null, t[1]);
+      if (t[0] === tab) a.setAttribute("aria-current", "page");
+      nav.appendChild(a);
+    });
+    if (nav.children.length > 1) app.appendChild(nav);
+
+    if (tab === "current" && NO_NEP_YET.indexOf(c) !== -1) {
+      app.appendChild(el("p", "lead", "No new-syllabus books yet. These are the books schools use."));
+    } else if (tab === "old") {
+      app.appendChild(el("p", "lead", "Books this class used before the syllabus changed."));
+    }
+    bookList(groups[tab]);
+  }
+
+  function viewSolutions(c) {
+    classHeader("solutions", c);
+    app.appendChild(el("p", "lead", "Open a book, then tap Solve next to any chapter."));
+    bookList(solutionBooks(c).sort(function (a, b) { return a.g === b.g ? 0 : a.g === "current" ? -1 : 1; }));
+  }
+
+  function viewExemplar(c) {
+    classHeader("exemplar", c);
+    bookList(inGroup(c, "practice"));
+  }
+
   function viewBook(id) {
     var b = BY_ID[id];
     if (!b) { app.appendChild(el("h1", null, "Book not found")); app.appendChild(internal("#/", "btn", "Back to classes")); return; }
     save("ncert-last", b.id);
 
-    if (b.g === "upsc") app.appendChild(internal("#/upsc", "back", "← UPSC shelf"));
-    else app.appendChild(internal(tabHref(b.c, b.g), "back", "← Class " + b.c));
+    var fromHash = backTo && backTo.c === b.c ? backTo : null;
+    if (b.g === "upsc") app.appendChild(internal("#/upsc", "back", "← UPSC"));
+    else if (fromHash) app.appendChild(internal(fromHash.href, "back", "← " + fromHash.label));
+    else app.appendChild(internal(tabHref(b.c, b.g), "back", "← Class " + b.c + (b.g === "practice" ? " exemplar" : "")));
 
     var head = el("div", "book-head");
     head.appendChild(spine(b, "spine big"));
@@ -483,7 +552,9 @@
   }
 
   function viewUpsc() {
-    app.appendChild(el("h1", null, "UPSC shelf"));
+    backTo = null;
+    app.appendChild(internal("#/", "back", "← Home"));
+    app.appendChild(el("h1", null, "UPSC"));
     app.appendChild(el("p", "lead", "Out-of-print NCERT history books that UPSC aspirants still read, in the order they are usually read."));
     var ol = el("ol", "steps");
     UPSC_PATH.forEach(function (step) {
@@ -528,22 +599,10 @@
   }
 
   function viewMore() {
+    app.appendChild(internal("#/", "back", "← Home"));
     app.appendChild(el("h1", null, "Papers & resources"));
-    app.appendChild(el("p", "lead", "Practice material and official documents that go with the textbooks."));
-    app.appendChild(el("h2", null, "Exemplars & lab manuals"));
-    app.appendChild(el("p", "lead", "These are now in each class's Practice tab."));
-    var grid = el("div", "class-grid");
-    for (var c = 1; c <= 12; c++) {
-      var n = inGroup(c, "practice").length;
-      if (!n) continue;
-      var tile = internal(tabHref(c, "practice"), "class-tile");
-      tile.appendChild(el("small", null, "Class"));
-      tile.appendChild(el("b", null, String(c)));
-      tile.appendChild(el("span", null, plural(n, "book")));
-      grid.appendChild(tile);
-    }
-    app.appendChild(grid);
-    app.appendChild(el("h2", null, "Practice"));
+    app.appendChild(el("p", "lead", "Sample papers and official documents that go with the textbooks."));
+    app.appendChild(el("h2", null, "Papers"));
     app.appendChild(cards(PRACTICE));
     app.appendChild(el("h2", null, "Resources"));
     app.appendChild(cards(RESOURCES));
@@ -573,10 +632,23 @@
     var hash = decodeURIComponent(location.hash.replace(/^#\/?/, ""));
     var parts = hash.split("/");
     var name = "home";
+    var n = +parts[1];
+    var validClass = n >= 1 && n <= 12;
     if (parts[0] === "old") { location.replace("#/upsc"); return; }
+    if (parts[0] === "class" && parts[2] === "practice") { location.replace("#/exemplar/" + parts[1]); return; }
     app.textContent = "";
-    if (parts[0] === "class" && +parts[1] >= 1 && +parts[1] <= 12) { name = "class"; viewClass(+parts[1], parts[2] || "current"); }
-    else if (parts[0] === "book" && parts[1]) { name = "book"; viewBook(parts.slice(1).join("/")); }
+    if (parts[0] === "class" && validClass) { name = "books"; viewClass(n, parts[2] || "current"); }
+    else if (parts[0] === "books") { name = "books"; viewSection("books"); }
+    else if ((parts[0] === "solutions" || parts[0] === "exemplar") && validClass && SECTION_BOOKS[parts[0]](n)) {
+      name = parts[0];
+      if (name === "solutions") viewSolutions(n); else viewExemplar(n);
+    }
+    else if (parts[0] === "solutions" || parts[0] === "exemplar") { name = parts[0]; viewSection(name); }
+    else if (parts[0] === "book" && parts[1]) {
+      var bk = BY_ID[parts.slice(1).join("/")];
+      name = bk && bk.g === "upsc" ? "upsc" : backTo && bk && backTo.c === bk.c ? backTo.k : bk && bk.g === "practice" ? "exemplar" : "books";
+      viewBook(parts.slice(1).join("/"));
+    }
     else if (parts[0] === "upsc") { name = "upsc"; viewUpsc(); }
     else if (parts[0] === "more") { name = "more"; viewMore(); }
     else if (parts[0] === "search" && parts.slice(1).join("/").trim()) {
@@ -587,16 +659,8 @@
     }
     else viewHome();
 
-    var mine = load("ncert-class", null);
-    var myClass = document.getElementById("myClassLink");
-    if (myClass) myClass.href = mine ? "#/class/" + mine : "#/";
-    var onMine = name === "class" && mine && location.hash.indexOf("#/class/" + mine) === 0;
     [].forEach.call(document.querySelectorAll("[data-route]"), function (a) {
-      var r = a.dataset.route;
-      var current = r === name || (r === "home" && (name === "class" || name === "book"));
-      if (r === "mine") current = !!onMine;
-      else if (r === "home" && onMine && a.closest(".bottom-nav")) current = false;
-      if (current) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current");
+      if (a.dataset.route === name) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current");
     });
     if (name !== "search") searchInput.value = "";
     window.scrollTo(0, 0);
