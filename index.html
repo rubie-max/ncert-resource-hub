@@ -5,8 +5,18 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>NCERT Library · Every book, Class 1–12</title>
 <meta name="description" content="Every NCERT textbook for Classes 1–12, with chapter PDFs and independent solutions, sorted by class and syllabus.">
-<meta name="theme-color" content="#f6f7fb" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#0d1017" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#f6f7fb">
+<link rel="icon" href="logo.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="logo.svg">
+<script>
+  (function () {
+    var t;
+    try { t = localStorage.getItem("ncert-theme"); } catch (e) {}
+    if (t !== "light" && t !== "dark") t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    document.documentElement.dataset.theme = t;
+    document.querySelector('meta[name="theme-color"]').content = t === "dark" ? "#0d1017" : "#f6f7fb";
+  })();
+</script>
 <link rel="preload" href="fonts/jakarta-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="styles.css">
 </head>
@@ -16,13 +26,14 @@
 <header class="top">
   <div class="wrap top-inner">
     <a class="brand" href="#/">
-      <span class="brand-mark" data-icon="book"></span>
+      <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 32 32"><rect width="32" height="32" rx="9" fill="#4f46e5"/><path d="M5.5 13.2c3.6-1.7 7.1-1.4 10.5.9v11.4c-3.4-2.3-6.9-2.6-10.5-.9z" fill="#fff"/><path d="M26.5 13.2c-3.6-1.7-7.1-1.4-10.5.9v11.4c3.4-2.3 6.9-2.6 10.5-.9z" fill="#c7d2fe"/><path d="M16 3.2l1.2 2.7 2.7 1.2-2.7 1.2L16 11l-1.2-2.7-2.7-1.2 2.7-1.2z" fill="#fcd34d"/></svg></span>
       <span class="brand-text"><strong>NCERT Library</strong><small>Class 1–12 · direct PDFs</small></span>
     </a>
     <form class="search" id="searchForm" role="search">
       <label class="sr" for="q">Search all books</label>
-      <input id="q" type="search" placeholder="Search a book, subject or code" autocomplete="off" enterkeyhint="search">
+      <input id="q" type="search" placeholder="Search any book" autocomplete="off" enterkeyhint="search">
     </form>
+    <button class="theme-btn" id="themeBtn" type="button" aria-label="Switch to dark mode"></button>
   </div>
   <nav class="wrap tabs" aria-label="Sections">
     <a href="#/" data-route="home">Home</a>
