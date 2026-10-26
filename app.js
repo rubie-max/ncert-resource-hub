@@ -16,7 +16,7 @@
     "History": "Social Science", "Geography": "Social Science", "Political Science": "Social Science", "Economics": "Social Science",
     "Environmental Studies": "EVS", "The World Around Us": "EVS"
   };
-  var TABS = [["current", "Current syllabus", ""], ["old", "Old syllabus", "/old"], ["practice", "Practice", "/practice"]];
+  var TABS = [["current", "Books", ""], ["old", "Old", "/old"], ["practice", "Practice", "/practice"]];
   var GROUP_LABEL = { current: "Current syllabus", old: "Old syllabus", practice: "Practice", upsc: "UPSC classic" };
   var NO_NEP_YET = [10, 11, 12];
 
@@ -183,7 +183,6 @@
     if (b.m && b.m !== b.s) bits.push(b.m);
     if (b.full) bits.push("Full book PDF");
     else if (b.ch.length) bits.push(plural(countable(b) || b.ch.length, "chapter"));
-    if (b.sol) bits.push(b.sol.c ? "Chapter solutions" : "Solutions");
     return bits.join(" · ");
   }
 
@@ -198,7 +197,7 @@
     if (!b.ch.length && !b.full) title.appendChild(el("span", "badge none", "No PDF yet"));
     text.appendChild(title);
     text.appendChild(el("span", null, bookMeta(b, opts.showClass)));
-    if (b.replacedBy.length && !opts.noPair) text.appendChild(el("span", "pair-line", "Replaced by " + titles(b.replacedBy)));
+    if (b.replacedBy.length && opts.showPair) text.appendChild(el("span", "pair-line", "Replaced by " + titles(b.replacedBy)));
     a.appendChild(text);
     var done = readCount(b), total = countable(b);
     if (done) a.appendChild(el("span", "row-progress", done + "/" + total));
@@ -246,7 +245,13 @@
   function chipRow(label, items, k, onChange) {
     var row = el("div", "chip-row");
     row.appendChild(el("span", null, label));
-    items.forEach(function (name) {
+    var main = items;
+    var rest = [];
+    if (k === "m" && items.length > 6) {
+      main = items.filter(function (n) { return n === "All" || MAIN_MEDIUMS.indexOf(n) !== -1 || n === filters.m; });
+      rest = items.filter(function (n) { return main.indexOf(n) === -1; });
+    }
+    function addChip(name) {
       var b = el("button", "chip", name);
       b.type = "button";
       b.setAttribute("aria-pressed", String(filters[k] === name));
@@ -257,7 +262,17 @@
         onChange();
       });
       row.appendChild(b);
-    });
+    }
+    main.forEach(addChip);
+    if (rest.length) {
+      var more = el("button", "chip more", "More");
+      more.type = "button";
+      more.addEventListener("click", function () {
+        more.remove();
+        rest.forEach(addChip);
+      });
+      row.appendChild(more);
+    }
     return row;
   }
 
@@ -281,81 +296,28 @@
     var mine = load("ncert-class", null);
     var last = BY_ID[load("ncert-last", "")];
 
-    app.appendChild(el("h1", null, "Every NCERT book, one place"));
-    app.appendChild(el("p", "lead", mine
-      ? "Welcome back. Your class and language stay on this device."
-      : "Open a class, pick a book, then read the chapter PDF or its solutions. Your class is remembered on this device."));
-
-    if (mine || last) {
-      var panel = el("div", "continue");
-      if (mine) {
-        var go = internal("#/class/" + mine, "continue-card");
-        go.appendChild(el("small", null, "Your class"));
-        go.appendChild(el("b", null, "Class " + mine));
-        var lang = load("ncert-lang", null);
-        go.appendChild(el("span", null, plural(inGroup(mine, "current").length, "current book") + (lang ? " · " + lang : "")));
-        panel.appendChild(go);
-      }
-      if (last) {
-        var cont = internal(bookHref(last), "continue-card");
-        cont.appendChild(el("small", null, "Continue reading"));
-        cont.appendChild(el("b", null, last.t));
-        var total = countable(last);
-        cont.appendChild(el("span", null, "Class " + last.c + " · " + (total ? readCount(last) + " of " + plural(total, "chapter") + " read" : last.s)));
-        panel.appendChild(cont);
-      }
-      if (mine) {
-        var reset = el("button", "link-btn", "Change class");
-        reset.type = "button";
-        reset.addEventListener("click", function () { save("ncert-class", null); route(); });
-        panel.appendChild(reset);
-      }
-      app.appendChild(panel);
+    app.appendChild(el("h1", null, "Pick your class"));
+    if (last) {
+      var cont = internal(bookHref(last), "continue-card");
+      cont.appendChild(el("small", null, "Continue"));
+      cont.appendChild(el("b", null, last.t));
+      var total = countable(last);
+      cont.appendChild(el("span", null, "Class " + last.c + (total ? " · " + readCount(last) + "/" + total : "")));
+      app.appendChild(cont);
     }
 
-    BANDS.forEach(function (band) {
-      var head = el("div", "band-head");
-      head.appendChild(el("h2", null, band[0]));
-      head.appendChild(el("p", "lead", band[1]));
-      app.appendChild(head);
-      var grid = el("div", "class-grid");
-      band[2].forEach(function (c) {
-        var tile = internal("#/class/" + c, "class-tile" + (c === mine ? " mine" : ""));
-        tile.appendChild(el("small", null, c === mine ? "Your class" : "Class"));
-        tile.appendChild(el("b", null, String(c)));
-        var oldCount = inGroup(c, "old").length;
-        var solCount = inGroup(c, "current").filter(function (b) { return b.sol; }).length;
-        tile.appendChild(el("span", null, plural(inGroup(c, "current").length, "book") + (solCount ? " · " + solCount + " with solutions" : "") + (oldCount ? " · " + oldCount + " old" : "")));
-        grid.appendChild(tile);
-      });
-      app.appendChild(grid);
-    });
-    var extra = el("div", "class-grid extras");
-    var upsc = internal("#/upsc", "class-tile alt");
-    upsc.appendChild(el("small", null, "Reading path"));
-    upsc.appendChild(el("b", null, "UPSC shelf"));
-    upsc.appendChild(el("span", null, plural(UPSC.length, "classic")));
-    extra.appendChild(upsc);
-    var more = internal("#/more", "class-tile");
-    more.appendChild(el("small", null, "Practice"));
-    more.appendChild(el("b", null, "Papers"));
-    more.appendChild(el("span", null, "Sample papers, exemplars, official sites"));
-    extra.appendChild(more);
-    app.appendChild(extra);
+    var grid = el("div", "class-pad");
+    for (var c = 1; c <= 12; c++) {
+      var tile = internal("#/class/" + c, "class-num" + (c === mine ? " mine" : ""));
+      tile.appendChild(el("b", null, String(c)));
+      grid.appendChild(tile);
+    }
+    app.appendChild(grid);
 
-    var chapters = BOOKS.reduce(function (n, b) { return n + b.ch.length; }, 0);
-    var withSol = BOOKS.filter(function (b) { return b.sol; }).length;
-    var stats = el("div", "stats");
-    [[BOOKS.filter(function (b) { return b.g === "current"; }).length, "Current syllabus books"],
-     [withSol, "Books with solutions"],
-     [BOOKS.filter(function (b) { return b.g === "practice"; }).length, "Exemplars & lab manuals"],
-     [chapters.toLocaleString("en-IN"), "Chapter PDFs"]].forEach(function (s) {
-      var d = el("div", "stat");
-      d.appendChild(el("b", null, String(s[0])));
-      d.appendChild(el("span", null, s[1]));
-      stats.appendChild(d);
-    });
-    app.appendChild(stats);
+    var extras = el("div", "home-links");
+    extras.appendChild(internal("#/upsc", "home-link", "UPSC books"));
+    extras.appendChild(internal("#/more", "home-link", "Papers & resources"));
+    app.appendChild(extras);
   }
 
   function viewClass(c, tab) {
@@ -365,7 +327,7 @@
     if (!groups[tab] || !groups[tab].length) tab = "current";
     var all = groups[tab];
 
-    app.appendChild(crumbs([["Classes", "#/"], ["Class " + c]]));
+    app.appendChild(internal("#/", "back", "← Classes"));
     app.appendChild(el("h1", null, "Class " + c));
 
     var nav = el("nav", "seg");
@@ -380,13 +342,9 @@
     app.appendChild(nav);
 
     if (tab === "current" && NO_NEP_YET.indexOf(c) !== -1) {
-      app.appendChild(el("p", "lead", "NCERT hasn't released new-syllabus books for Class " + c + " yet, so these are still the books schools use."));
-    } else if (tab === "current") {
-      app.appendChild(el("p", "lead", "The books schools use now (NEP 2020 series)."));
+      app.appendChild(el("p", "lead", "No new-syllabus books yet. These are the books schools use."));
     } else if (tab === "old") {
-      app.appendChild(el("p", "lead", "Books Class " + c + " used before NCERT changed the syllabus. Each one shows the book that replaced it."));
-    } else {
-      app.appendChild(el("p", "lead", "Exemplar problems and lab manuals for Class " + c + "."));
+      app.appendChild(el("p", "lead", "Older books this class used before the syllabus changed."));
     }
 
     var mediums = mediumsOf(all);
@@ -419,8 +377,8 @@
     if (!b) { app.appendChild(el("h1", null, "Book not found")); app.appendChild(internal("#/", "btn", "Back to classes")); return; }
     save("ncert-last", b.id);
 
-    if (b.g === "upsc") app.appendChild(crumbs([["UPSC shelf", "#/upsc"], [b.t]]));
-    else app.appendChild(crumbs([["Classes", "#/"], ["Class " + b.c, "#/class/" + b.c], [GROUP_LABEL[b.g], tabHref(b.c, b.g)], [b.t]]));
+    if (b.g === "upsc") app.appendChild(internal("#/upsc", "back", "← UPSC shelf"));
+    else app.appendChild(internal(tabHref(b.c, b.g), "back", "← Class " + b.c));
 
     var head = el("div", "book-head");
     head.appendChild(spine(b, "spine big"));
@@ -433,16 +391,16 @@
 
     if (b.note) app.appendChild(el("p", "note", b.note));
 
-    var actions = el("div", "actions");
-    if (b.full) actions.appendChild(ext(b.full, "btn primary", "Open full book PDF"));
+    var actions = el("div", "actions hero-actions");
+    if (b.full) actions.appendChild(ext(b.full, "btn primary", "Full book"));
     var firstReal = b.ch.filter(function (c) { return !/^prelims$/i.test(c[0]); })[0];
-    if (!b.full && firstReal) actions.appendChild(ext(firstReal[1], "btn primary", "Open first chapter"));
-    if (b.zip) actions.appendChild(ext(b.zip, "btn", "Download full book (ZIP)"));
-    if (b.page) actions.appendChild(ext(b.page, "btn", b.src === "diksha" ? "Read on DIKSHA" : b.src === "mirror" ? "Source page" : "Archive page"));
-    if (b.sol) actions.appendChild(ext(solUrl(b), "btn sol", b.sol.c ? "All solutions" : "Solutions"));
+    if (!b.full && firstReal) actions.appendChild(ext(firstReal[1], "btn primary", "Open PDF"));
+    if (b.sol) actions.appendChild(ext(solUrl(b), "btn sol", "Solutions"));
+    if (b.zip) actions.appendChild(ext(b.zip, "btn more-btn", "ZIP"));
+    if (b.page) actions.appendChild(ext(b.page, "btn more-btn", b.src === "diksha" ? "DIKSHA" : b.src === "mirror" ? "Source" : "Archive"));
     if (!b.ch.length && !b.full) {
       actions.appendChild(ext(dikshaSearch(b.t + " class " + b.c), "btn", "Search DIKSHA"));
-      actions.appendChild(ext(archiveSearch("NCERT " + b.t), "btn", "Search Internet Archive"));
+      actions.appendChild(ext(archiveSearch("NCERT " + b.t), "btn", "Search Archive"));
     }
     app.appendChild(actions);
 
@@ -477,24 +435,29 @@
         ticks.forEach(function (t) { t[0].setAttribute("aria-pressed", String(readOf(b).indexOf(t[1]) !== -1)); t[2].classList.toggle("done", readOf(b).indexOf(t[1]) !== -1); });
       }
       b.ch.forEach(function (c, i) {
-        var li = el("li");
-        var a = ext(c[1], null, null);
-        a.appendChild(el("span", null, chapterNumber(c[0], i)));
-        a.appendChild(el("span", null, c[0]));
-        a.appendChild(el("span", "open-hint", "PDF"));
+        var li = el("li", "ch-card");
+        var top = el("div", "ch-top");
         var prelims = /^prelims$/i.test(c[0]);
-        a.addEventListener("click", function () { if (!prelims) { setRead(b, i, true); refresh(); } });
         var tick = el("button", "tick" + (prelims ? " blank" : ""));
         if (prelims) tick.disabled = true;
         tick.type = "button";
         tick.title = "Mark as read";
         tick.setAttribute("aria-label", "Mark " + c[0] + " as read");
         tick.addEventListener("click", function () { setRead(b, i, readOf(b).indexOf(i) === -1); refresh(); });
-        li.appendChild(tick);
-        li.appendChild(a);
+        var title = el("div", "ch-title");
+        title.appendChild(el("b", null, chapterNumber(c[0], i)));
+        title.appendChild(el("span", null, c[0]));
+        top.appendChild(tick);
+        top.appendChild(title);
+        li.appendChild(top);
+        var btns = el("div", "ch-btns");
+        var pdf = ext(c[1], "btn primary", "PDF");
+        pdf.addEventListener("click", function () { if (!prelims) { setRead(b, i, true); refresh(); } });
+        btns.appendChild(pdf);
         if (b.sol && b.sol.c && b.sol.c[String(i)]) {
-          li.appendChild(ext(solUrl(b, b.sol.c[String(i)]), "sol-link", "Solve"));
+          btns.appendChild(ext(solUrl(b, b.sol.c[String(i)]), "btn sol", "Solve"));
         }
+        li.appendChild(btns);
         ticks.push([tick, i, li]);
         list.appendChild(li);
       });
