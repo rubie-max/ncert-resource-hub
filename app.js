@@ -32,6 +32,9 @@
     file: '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M8 13h8"/><path d="M8 17h5"/>',
     papers: '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M8 13h8"/><path d="M8 17h8"/><path d="M8 9h2"/>',
     chev: '<path d="m9 18 6-6-6-6"/>',
+    down: '<path d="m6 9 6 6 6-6"/>',
+    moon: '<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>',
+    sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
     back: '<path d="m15 18-6-6 6-6"/>',
     check: '<path d="M20 6 9 17l-5-5"/>',
     sigma: '<path d="M18 7V4H6l6 8-6 8h12v-3"/>',
@@ -434,28 +437,91 @@
     return nav;
   }
 
+  function bookTile(b) {
+    var a = internal(bookHref(b), "tile");
+    var top = el("span", "tile-cover");
+    top.style.setProperty("--c", COLORS[b.s] || "#64748b");
+    top.appendChild(icon(subjectIconName(b), "cover-ic"));
+    if (b.sol) {
+      var sol = el("span", "tile-sol");
+      sol.appendChild(icon("bulb"));
+      sol.appendChild(document.createTextNode("Solutions"));
+      top.appendChild(sol);
+    }
+    a.appendChild(top);
+    a.appendChild(el("strong", null, b.t));
+    var bits = [b.s];
+    if (filters.m === "All" && b.m && b.m !== b.s) bits.push(b.m);
+    var total = countable(b);
+    if (b.ch.length) bits.push(plural(total || b.ch.length, "chapter"));
+    else if (b.full) bits.push("Full book");
+    else bits.push("No PDF yet");
+    a.appendChild(el("span", "tile-sub", bits.join(" · ")));
+    var done = readCount(b);
+    if (done && total) {
+      var bar = el("span", "tile-bar");
+      var fill = el("span");
+      fill.style.width = Math.round(done / total * 100) + "%";
+      bar.appendChild(fill);
+      a.appendChild(bar);
+    }
+    return a;
+  }
+
   function bookList(all) {
     var mediums = mediumsOf(all);
-    var subjects = ["All"].concat(groupBySubject(all).map(function (p) { return p[0]; }));
-    if (subjects.indexOf(filters.s) === -1) filters.s = "All";
-    var mediumChips = ["All"].concat(mediums);
-    if (mediumChips.indexOf(filters.m) === -1) filters.m = mediums[0] || "All";
-    var results = el("div");
-    var count = el("p", "count");
+    if (filters.m !== "All" && mediums.indexOf(filters.m) === -1) filters.m = mediums[0] || "All";
+    var bar = el("div", "toolbar");
+    var chipsBox = el("div", "subj-chips");
+    var results = el("div", "tiles");
+    function inLang(b) { return filters.m === "All" || b.m === filters.m; }
+    function drawChips() {
+      var subjects = groupBySubject(all.filter(inLang)).map(function (p) { return p[0]; });
+      if (subjects.indexOf(filters.s) === -1) filters.s = "All";
+      chipsBox.textContent = "";
+      chipsBox.hidden = subjects.length < 2;
+      ["All"].concat(subjects).forEach(function (name) {
+        var b = el("button", "chip", name === "All" ? "All subjects" : name);
+        b.type = "button";
+        b.setAttribute("aria-pressed", String(filters.s === name));
+        b.addEventListener("click", function () {
+          filters.s = name;
+          [].forEach.call(chipsBox.children, function (x) { x.setAttribute("aria-pressed", String(x === b)); });
+          draw();
+        });
+        chipsBox.appendChild(b);
+      });
+    }
     function draw() {
       results.textContent = "";
       var list = all.filter(passes);
-      count.textContent = "Showing " + list.length + " of " + all.length;
       if (!list.length) { results.appendChild(el("p", "empty", "No books match these filters.")); return; }
-      subjectBlocks(list, results);
+      groupBySubject(list).forEach(function (p) { p[1].forEach(function (b) { results.appendChild(bookTile(b)); }); });
     }
-    if (mediums.length > 1 || subjects.length > 2) {
-      var box = el("div", "filters");
-      if (mediums.length > 1) box.appendChild(chipRow("Language", mediumChips, "m", draw));
-      if (subjects.length > 2) box.appendChild(chipRow("Subject", subjects, "s", draw));
-      app.appendChild(box);
+    if (mediums.length > 1) {
+      var pick = el("label", "lang-pick");
+      pick.appendChild(icon("lang"));
+      var sel = el("select");
+      sel.setAttribute("aria-label", "Language");
+      ["All"].concat(mediums).forEach(function (m) {
+        var o = el("option", null, m === "All" ? "All languages" : m);
+        o.value = m;
+        if (m === filters.m) o.selected = true;
+        sel.appendChild(o);
+      });
+      sel.addEventListener("change", function () {
+        filters.m = sel.value;
+        save("ncert-lang", sel.value);
+        drawChips();
+        draw();
+      });
+      pick.appendChild(sel);
+      pick.appendChild(icon("down", "caret"));
+      bar.appendChild(pick);
     }
-    app.appendChild(count);
+    bar.appendChild(chipsBox);
+    drawChips();
+    if (bar.children.length > 1 || !chipsBox.hidden) app.appendChild(bar);
     app.appendChild(results);
     draw();
   }
@@ -779,6 +845,29 @@
     n.textContent = "";
     n.appendChild(icon(n.dataset.icon));
   });
+  var themeBtn = document.getElementById("themeBtn");
+  function applyTheme(t) {
+    document.documentElement.dataset.theme = t;
+    var meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.content = t === "dark" ? "#0d1017" : "#f6f7fb";
+    themeBtn.textContent = "";
+    themeBtn.appendChild(icon(t === "dark" ? "sun" : "moon"));
+    themeBtn.setAttribute("aria-label", t === "dark" ? "Switch to light mode" : "Switch to dark mode");
+    themeBtn.title = themeBtn.getAttribute("aria-label");
+  }
+  applyTheme(document.documentElement.dataset.theme === "dark" ? "dark" : "light");
+  themeBtn.addEventListener("click", function () {
+    var next = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
+    try { localStorage.setItem("ncert-theme", next); } catch (e) { /* storage off */ }
+    applyTheme(next);
+  });
+  if (window.matchMedia) {
+    matchMedia("(prefers-color-scheme: dark)").addEventListener("change", function (e) {
+      var saved;
+      try { saved = localStorage.getItem("ncert-theme"); } catch (err) { /* storage off */ }
+      if (!saved) applyTheme(e.matches ? "dark" : "light");
+    });
+  }
   window.addEventListener("hashchange", route);
   route();
 })();
