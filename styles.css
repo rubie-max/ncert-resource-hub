@@ -33,22 +33,21 @@
   --sans: "Jakarta", "Segoe UI", system-ui, -apple-system, "Nirmala UI", "Noto Sans", sans-serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #0d1017;
-    --surface: #151a23;
-    --surface-2: #1c222d;
-    --ink: #e8ecf4;
-    --muted: #95a0b5;
-    --line: #262d3a;
-    --accent: #8f8cff;
-    --accent-ink: #12113d;
-    --accent-soft: #1f2148;
-    --good: #34d399;
-    --good-soft: #10291f;
-    --warm: #fb923c;
-    --warm-soft: #33210f;
-  }
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #0d1017;
+  --surface: #151a23;
+  --surface-2: #1c222d;
+  --ink: #e8ecf4;
+  --muted: #95a0b5;
+  --line: #262d3a;
+  --accent: #8f8cff;
+  --accent-ink: #12113d;
+  --accent-soft: #1f2148;
+  --good: #34d399;
+  --good-soft: #10291f;
+  --warm: #fb923c;
+  --warm-soft: #33210f;
 }
 
 * { box-sizing: border-box; }
@@ -80,11 +79,15 @@ a { color: inherit; }
 }
 .top-inner { display: flex; align-items: center; gap: 14px; padding: 10px 0; }
 .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; flex: none; }
-.brand-mark {
-  width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center;
-  background: var(--accent); color: var(--accent-ink);
+.brand-mark { width: 40px; height: 40px; flex: none; display: block; }
+.brand-mark svg { width: 100%; height: 100%; display: block; }
+.theme-btn {
+  flex: none; display: grid; place-items: center; width: 42px; height: 42px; padding: 0; cursor: pointer;
+  color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 14px;
+  transition: transform 0.2s, border-color 0.15s;
 }
-.brand-mark .ic { width: 22px; height: 22px; }
+.theme-btn:hover { border-color: var(--accent); color: var(--accent); }
+.theme-btn:active { transform: rotate(-20deg) scale(0.94); }
 .brand-text strong { display: block; font-size: 16px; font-weight: 800; letter-spacing: -0.01em; line-height: 1.15; }
 .brand-text small { display: block; font-size: 12px; color: var(--muted); }
 .search { flex: 1; min-width: 0; }
@@ -199,6 +202,54 @@ h2 { font-size: 19px; font-weight: 800; letter-spacing: -0.015em; line-height: 1
 .chip[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: var(--bg); }
 .count { font-size: 13px; color: var(--muted); margin: 10px 2px 0; }
 
+/* Class page: filter bar and book tiles */
+.toolbar { display: flex; gap: 8px; align-items: center; margin: 0 0 14px; }
+.lang-pick {
+  position: relative; flex: none; display: inline-flex; align-items: center; gap: 6px; height: 40px; padding: 0 30px 0 10px;
+  font-size: 13px; font-weight: 700; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; cursor: pointer;
+}
+.lang-pick:focus-within { border-color: var(--accent); }
+.lang-pick .ic { width: 16px; height: 16px; color: var(--accent); }
+.lang-pick .caret { position: absolute; right: 9px; color: var(--muted); pointer-events: none; }
+.lang-pick select {
+  appearance: none; -webkit-appearance: none; border: 0; background: transparent; font: inherit; color: var(--ink);
+  cursor: pointer; outline: none; max-width: 120px;
+}
+.subj-chips { display: flex; gap: 6px; flex: 1; min-width: 0; overflow-x: auto; scrollbar-width: none; }
+.subj-chips::-webkit-scrollbar { display: none; }
+.subj-chips .chip { min-height: 40px; }
+.tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+@media (min-width: 720px) { .tiles { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; } }
+.tile {
+  display: flex; flex-direction: column; gap: 3px; padding: 6px 6px 12px; text-decoration: none;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 20px;
+  transition: border-color 0.15s, transform 0.15s;
+}
+.tile:hover { border-color: color-mix(in srgb, var(--accent) 45%, var(--line)); }
+.tile:active { transform: scale(0.98); }
+.tile-cover {
+  position: relative; display: flex; align-items: flex-end; height: 92px; padding: 12px; margin-bottom: 8px; border-radius: 15px;
+  color: var(--c); background: color-mix(in srgb, var(--c) 12%, var(--surface));
+}
+.cover-ic { width: 36px; height: 36px; }
+.cover-ic svg { stroke-width: 1.8; }
+.tile-cover .tile-sol { position: absolute; top: 8px; right: 8px; background: var(--surface); }
+.tile strong, .tile-sub, .tile-bar { margin-left: 8px; margin-right: 8px; }
+[data-theme="dark"] .tile-cover { color: color-mix(in srgb, var(--c) 60%, #fff); background: color-mix(in srgb, var(--c) 20%, var(--surface)); }
+.tile strong {
+  font-size: 15px; font-weight: 800; line-height: 1.3; letter-spacing: -0.01em;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.tile-sub { font-size: 12px; color: var(--muted); line-height: 1.35; }
+.tile-sol {
+  display: inline-flex; align-items: center; gap: 3px; font-size: 11px; font-weight: 700;
+  color: var(--good); background: var(--good-soft); padding: 4px 8px 4px 6px; border-radius: 999px;
+}
+.tile-sol .ic { width: 13px; height: 13px; }
+.tile-bar { display: block; height: 4px; margin-top: 8px; border-radius: 999px; background: var(--surface-2); overflow: hidden; }
+.tile-bar span { display: block; height: 100%; background: var(--accent); }
+@media (max-width: 380px) { .tile-sol { font-size: 0; gap: 0; padding: 5px; } }
+
 /* Book list */
 .subject { margin-top: 22px; }
 .subject h2 { margin: 0 0 10px; display: flex; align-items: baseline; gap: 8px; }
@@ -216,9 +267,7 @@ h2 { font-size: 19px; font-weight: 800; letter-spacing: -0.015em; line-height: 1
   width: 48px; height: 48px; padding: 12px; border-radius: 14px;
   color: var(--c); background: color-mix(in srgb, var(--c) 13%, var(--surface));
 }
-@media (prefers-color-scheme: dark) {
-  .sicon, .section-mark { color: color-mix(in srgb, var(--c) 60%, #fff); background: color-mix(in srgb, var(--c) 22%, var(--surface)); }
-}
+[data-theme="dark"] .sicon, [data-theme="dark"] .section-mark { color: color-mix(in srgb, var(--c) 60%, #fff); background: color-mix(in srgb, var(--c) 22%, var(--surface)); }
 .sicon.big { width: 64px; height: 64px; padding: 16px; border-radius: 18px; }
 .book-text { min-width: 0; flex: 1; display: grid; gap: 6px; }
 .book-text strong { font-size: 15.5px; font-weight: 700; line-height: 1.3; letter-spacing: -0.005em; }
