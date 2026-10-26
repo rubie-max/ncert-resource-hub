@@ -102,7 +102,34 @@ h2 { font: 700 22px/1.2 var(--serif); margin: 30px 0 12px; }
   display: grid; place-items: center; min-height: 72px; text-decoration: none;
   background: var(--surface); border: 1px solid var(--line); border-radius: 16px;
 }
+.class-num { align-content: center; gap: 4px; }
+.class-num small { font-size: 11px; font-weight: 600; color: var(--muted); }
+.class-num.mine small { color: var(--accent-ink); }
 .class-num b { font: 700 26px/1 var(--sans); }
+
+/* Home sections */
+.sections { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 16px 0 18px; }
+@media (min-width: 720px) { .sections { grid-template-columns: repeat(4, 1fr); } }
+.section-card {
+  display: flex; flex-direction: column; gap: 4px; min-height: 140px; padding: 16px; text-decoration: none;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 18px;
+}
+.section-card:hover { border-color: var(--accent); }
+.section-mark {
+  display: grid; place-items: center; width: 44px; height: 44px; margin-bottom: auto; border-radius: 12px;
+  color: #fff; font: 700 20px/1 var(--sans);
+}
+.section-card b { font-size: 17px; margin-top: 14px; }
+.section-card span:last-child { font-size: 13px; color: var(--muted); line-height: 1.35; }
+
+/* Class switcher inside a section */
+.class-strip { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; margin: 4px 0 14px; padding-bottom: 2px; }
+.class-strip::-webkit-scrollbar { display: none; }
+.class-strip a {
+  flex: none; display: grid; place-items: center; min-width: 44px; height: 44px; border-radius: 12px; text-decoration: none;
+  font-weight: 700; background: var(--surface); border: 1px solid var(--line); color: var(--ink);
+}
+.class-strip a[aria-current="page"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
 .class-num.mine { background: var(--accent); border-color: var(--accent); }
 .class-num.mine b { color: var(--accent-ink); }
 .class-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
@@ -244,7 +271,7 @@ h2 { font: 700 22px/1.2 var(--serif); margin: 30px 0 12px; }
   .ch-top { margin-bottom: 8px; }
   body { padding-bottom: calc(64px + env(safe-area-inset-bottom)); }
   .bottom-nav {
-    display: grid; grid-template-columns: repeat(4, 1fr); position: fixed; left: 0; right: 0; bottom: 0; z-index: 30;
+    display: grid; grid-template-columns: repeat(5, 1fr); position: fixed; left: 0; right: 0; bottom: 0; z-index: 30;
     padding: 6px 6px calc(6px + env(safe-area-inset-bottom)); background: var(--surface); border-top: 1px solid var(--line);
   }
   .bottom-nav a { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 0; text-decoration: none; font-size: 11.5px; font-weight: 600; color: var(--muted); border-radius: 12px; }
