@@ -37,6 +37,7 @@
     sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
     back: '<path d="m15 18-6-6 6-6"/>',
     check: '<path d="M20 6 9 17l-5-5"/>',
+    video: '<rect x="2" y="5" width="20" height="14" rx="4"/><path d="m10 9 5 3-5 3z"/>',
     sigma: '<path d="M18 7V4H6l6 8-6 8h12v-3"/>',
     flask: '<path d="M9 3h6"/><path d="M10 3v6L4.5 19a2 2 0 0 0 1.8 3h11.4a2 2 0 0 0 1.8-3L14 9V3"/><path d="M7 15h10"/>',
     atom: '<circle cx="12" cy="12" r="1"/><ellipse cx="12" cy="12" rx="10" ry="4"/><ellipse cx="12" cy="12" rx="10" ry="4" transform="rotate(60 12 12)"/><ellipse cx="12" cy="12" rx="10" ry="4" transform="rotate(120 12 12)"/>',
@@ -232,6 +233,7 @@
     var host = b.sol.h === "h" ? "hindi" : "www";
     return "https://" + host + ".tiwariacademy.com/ncert-solutions/" + b.sol.p + (path || "");
   }
+  function pwVideos(b) { return (typeof PW_VIDEOS !== "undefined" && PW_VIDEOS[b.id]) || null; }
   function bookHref(b) { return "#/book/" + encodeURIComponent(b.id); }
   function tabHref(c, g) {
     if (g === "practice") return "#/exemplar/" + c;
@@ -735,6 +737,7 @@
     if (b.full) heroBtn(b.full, "primary", "file", "Read full book");
     else if (firstReal) heroBtn(firstReal[1], "primary", "file", "Start reading");
     if (b.sol) heroBtn(solUrl(b), "sol", "bulb", "Solutions");
+    var pw = pwVideos(b);
     if (!b.ch.length && !b.full) {
       heroBtn(dikshaSearch(b.t + " class " + b.c), "", "globe", "Search DIKSHA");
       heroBtn(archiveSearch("NCERT " + b.t), "", "globe", "Search Archive");
@@ -799,6 +802,13 @@
         pdf.setAttribute("aria-label", "Open " + c[0] + " PDF");
         pdf.addEventListener("click", function () { if (!prelims) { setRead(b, i, true); refresh(); } });
         btns.appendChild(pdf);
+        if (pw && pw[String(i)]) {
+          var vd = ext("https://www.youtube.com/watch?v=" + pw[String(i)], "pill-btn vid");
+          vd.appendChild(icon("video"));
+          vd.appendChild(document.createTextNode("Video"));
+          vd.setAttribute("aria-label", "Physics Wallah lesson for " + c[0]);
+          btns.appendChild(vd);
+        }
         if (b.sol && b.sol.c && b.sol.c[String(i)]) {
           var sv = ext(solUrl(b, b.sol.c[String(i)]), "pill-btn sol");
           sv.appendChild(icon("bulb"));
@@ -811,7 +821,8 @@
         list.appendChild(li);
       });
       sec.appendChild(list);
-      sec.appendChild(el("p", "source", "Tap a chapter number to mark it read. Opening a PDF marks it too. Solutions open on Tiwari Academy, an independent site — check them against the textbook."));
+      sec.appendChild(el("p", "source", "Tap a chapter number to mark it read. Opening a PDF marks it too. Solutions open on Tiwari Academy, an independent site — check them against the textbook." +
+        (pw ? " Video plays a Physics Wallah lesson on YouTube for that chapter. Physics Wallah is also independent of NCERT." : "")));
       app.appendChild(sec);
       refresh();
     } else if (!b.full) {
