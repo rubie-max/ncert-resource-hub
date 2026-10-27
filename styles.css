@@ -27,6 +27,8 @@
   --accent-soft: #eef0ff;
   --good: #059669;
   --good-soft: #e7f7f0;
+  --yt: #dc2626;
+  --yt-soft: #fdecec;
   --warm: #c2410c;
   --warm-soft: #fdf0e8;
   --radius: 18px;
@@ -46,6 +48,8 @@
   --accent-soft: #1f2148;
   --good: #34d399;
   --good-soft: #10291f;
+  --yt: #f87171;
+  --yt-soft: #2f1517;
   --warm: #fb923c;
   --warm-soft: #33210f;
 }
@@ -538,6 +542,9 @@ h2 { font-size: 19px; font-weight: 800; letter-spacing: -0.015em; line-height: 1
 .pill-btn .ic { width: 16px; height: 16px; color: var(--accent); }
 .pill-btn.sol { color: var(--good); background: var(--good-soft); }
 .pill-btn.sol .ic { color: var(--good); }
+.pill-btn.vid { color: var(--yt); background: var(--yt-soft); }
+.pill-btn.vid .ic { color: var(--yt); }
+.btn.vid { background: var(--yt-soft); border-color: transparent; color: var(--yt); }
 
 /* UPSC shelf */
 .seg button {
@@ -655,6 +662,8 @@ h2 { font-size: 19px; font-weight: 800; letter-spacing: -0.015em; line-height: 1
   .sicon.big { width: 56px; height: 56px; padding: 14px; }
   .ch-row { gap: 10px; padding: 12px 10px 12px 12px; }
   .pill-btn { padding: 0 10px; }
+  .pill-btn.vid, .ch-acts:has(.vid):has(.sol) .pill-btn { font-size: 0; gap: 0; width: 40px; justify-content: center; padding: 0; }
+  .pill-btn.vid .ic, .ch-acts:has(.vid):has(.sol) .pill-btn .ic { width: 18px; height: 18px; }
   body { padding-bottom: calc(68px + env(safe-area-inset-bottom)); }
   .bottom-nav {
     display: grid; grid-template-columns: repeat(5, 1fr); position: fixed; left: 0; right: 0; bottom: 0; z-index: 30;
