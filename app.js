@@ -56,7 +56,8 @@
     map: '<path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3z"/><path d="M9 3v15"/><path d="M15 6v15"/>',
     flag: '<path d="M4 22V4"/><path d="M4 4h13l-2 4 2 4H4"/>',
     pin: '<path d="M12 22s7-6.2 7-12a7 7 0 0 0-14 0c0 5.8 7 12 7 12z"/><circle cx="12" cy="10" r="2.5"/>',
-    out: '<path d="M14 3h7v7"/><path d="M10 14 21 3"/><path d="M21 14v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5"/>'
+    out: '<path d="M14 3h7v7"/><path d="M10 14 21 3"/><path d="M21 14v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5"/>',
+    gear: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>'
   };
   var SUBJECT_ICON = {
     "Mathematics": "sigma", "Science": "flask", "Chemistry": "flask", "Physics": "atom", "Biology": "leaf", "Biotechnology": "leaf",
@@ -328,6 +329,72 @@
     return "https://" + host + ".tiwariacademy.com/ncert-solutions/" + b.sol.p + (path || "");
   }
   function pwVideos(b) { return (typeof PW_VIDEOS !== "undefined" && PW_VIDEOS[b.id]) || null; }
+  var editMode = !!load("ncert-edit", false);
+  var edits = load("ncert-edits", null);
+  if (!edits || typeof edits !== "object") edits = { v: {}, s: {} };
+  if (!edits.v) edits.v = {};
+  if (!edits.s) edits.s = {};
+  function ytId(s) {
+    s = String(s || "").trim();
+    if (/^[A-Za-z0-9_-]{11}$/.test(s)) return s;
+    var m = s.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?(?:[^#]*&)?v=|embed\/|shorts\/|live\/))([A-Za-z0-9_-]{11})/);
+    return m ? m[1] : "";
+  }
+  function stockVideo(b, i) {
+    var pw = pwVideos(b);
+    return (pw && pw[String(i)]) || "";
+  }
+  function stockSol(b, i) {
+    return (b.sol && b.sol.c && b.sol.c[String(i)]) || "";
+  }
+  function overrideOf(kind, b, i) {
+    var o = edits[kind] && edits[kind][b.id];
+    return o && Object.prototype.hasOwnProperty.call(o, String(i)) ? o[String(i)] : null;
+  }
+  function chapterVideo(b, i) {
+    var o = overrideOf("v", b, i);
+    return o === null ? stockVideo(b, i) : o;
+  }
+  function chapterSolPath(b, i) {
+    var o = overrideOf("s", b, i);
+    return o === null ? stockSol(b, i) : o;
+  }
+  function setOverride(kind, b, i, value) {
+    if (!edits[kind]) edits[kind] = {};
+    if (!edits[kind][b.id]) edits[kind][b.id] = {};
+    if (value === null) delete edits[kind][b.id][String(i)];
+    else edits[kind][b.id][String(i)] = value;
+    if (!Object.keys(edits[kind][b.id]).length) delete edits[kind][b.id];
+    save("ncert-edits", edits);
+  }
+  function parseSolPath(url) {
+    url = String(url || "").trim();
+    if (!url) return "";
+    var m = url.match(/tiwariacademy\.com\/ncert-solutions\/(.*)$/i);
+    if (m) {
+      var rest = m[1].replace(/^\/+/, "");
+      return rest ? "/" + rest : "";
+    }
+    return url;
+  }
+  function solHref(b, path) {
+    if (!path) return "";
+    if (/^https?:\/\//i.test(path)) return path;
+    return solUrl(b, path);
+  }
+  function editCount() {
+    var n = 0;
+    ["v", "s"].forEach(function (k) {
+      Object.keys(edits[k] || {}).forEach(function (id) { n += Object.keys(edits[k][id]).length; });
+    });
+    return n;
+  }
+  function setEditMode(on) {
+    editMode = !!on;
+    save("ncert-edit", editMode);
+    var bar = document.getElementById("editBar");
+    if (bar) bar.hidden = !editMode;
+  }
   function bookHref(b) { return "#/book/" + encodeURIComponent(b.id); }
   function tabHref(c, g) {
     if (g === "practice") return "#/exemplar/" + c;
@@ -554,6 +621,11 @@
     });
     app.appendChild(stats);
     app.appendChild(papersLink());
+    var set = internal("#/settings", "home-link");
+    set.appendChild(icon("gear"));
+    set.appendChild(el("span", null, "Settings" + (editMode ? " · edit mode on" : "")));
+    set.appendChild(icon("chev", "chev"));
+    app.appendChild(set);
   }
 
   function viewHome() {
@@ -840,7 +912,7 @@
     if (b.full) heroBtn(b.full, "primary", "file", "Read full book");
     else if (firstReal) heroBtn(firstReal[1], "primary", "file", "Start reading");
     if (b.sol) heroBtn(solUrl(b), "sol", "bulb", "Solutions");
-    var pw = pwVideos(b);
+    var anyVid = b.ch.some(function (c, i) { return chapterVideo(b, i); });
     if (!b.ch.length && !b.full) {
       heroBtn(dikshaSearch(b.t + " class " + b.c), "", "globe", "Search DIKSHA");
       heroBtn(archiveSearch("NCERT " + b.t), "", "globe", "Search Archive");
@@ -905,18 +977,23 @@
         pdf.setAttribute("aria-label", "Open " + c[0] + " PDF");
         pdf.addEventListener("click", function () { if (!prelims) { setRead(b, i, true); refresh(); } });
         btns.appendChild(pdf);
-        if (pw && pw[String(i)]) {
-          var vd = ext("https://www.youtube.com/watch?v=" + pw[String(i)], "pill-btn vid");
+        var notLesson = prelims || /^(answers?|appendix|glossary|index|bibliography)/i.test(c[0].trim());
+        var vid = chapterVideo(b, i);
+        if (vid || (editMode && !notLesson)) {
+          var vd = ext(vid ? "https://www.youtube.com/watch?v=" + vid : "#", "pill-btn vid" + (overrideOf("v", b, i) !== null ? " custom" : "") + (vid ? "" : " add"));
           vd.appendChild(icon("video"));
-          vd.appendChild(document.createTextNode("Video"));
-          vd.setAttribute("aria-label", "Physics Wallah lesson for " + c[0]);
+          vd.appendChild(document.createTextNode(vid ? "Video" : "Add"));
+          vd.setAttribute("aria-label", (editMode ? "Edit video for " : "Physics Wallah lesson for ") + c[0]);
+          if (editMode) vd.addEventListener("click", function (e) { e.preventDefault(); openEdit(b, i); });
           btns.appendChild(vd);
         }
-        if (b.sol && b.sol.c && b.sol.c[String(i)]) {
-          var sv = ext(solUrl(b, b.sol.c[String(i)]), "pill-btn sol");
+        var solPath = chapterSolPath(b, i);
+        if (solPath || (editMode && !notLesson)) {
+          var sv = ext(solHref(b, solPath) || "#", "pill-btn sol" + (overrideOf("s", b, i) !== null ? " custom" : "") + (solPath ? "" : " add"));
           sv.appendChild(icon("bulb"));
-          sv.appendChild(document.createTextNode("Solve"));
-          sv.setAttribute("aria-label", "Solutions for " + c[0]);
+          sv.appendChild(document.createTextNode(solPath ? "Solve" : "Add"));
+          sv.setAttribute("aria-label", (editMode ? "Edit solutions for " : "Solutions for ") + c[0]);
+          if (editMode) sv.addEventListener("click", function (e) { e.preventDefault(); openEdit(b, i); });
           btns.appendChild(sv);
         }
         li.appendChild(btns);
@@ -925,7 +1002,8 @@
       });
       sec.appendChild(list);
       sec.appendChild(el("p", "source", "Tap a chapter number to mark it read. Opening a PDF marks it too. Solutions open on Tiwari Academy, an independent site — check them against the textbook." +
-        (pw ? " Video plays a Physics Wallah lesson on YouTube for that chapter. Physics Wallah is also independent of NCERT." : "")));
+        (anyVid ? " Video plays a Physics Wallah lesson on YouTube for that chapter. Physics Wallah is also independent of NCERT." : "") +
+        (editMode ? " Edit mode is on: tap Video or Solve to change the link on this device." : "")));
       app.appendChild(sec);
       refresh();
     } else if (!b.full) {
@@ -1306,8 +1384,177 @@
     return wrap;
   }
 
+  function viewSettings() {
+    app.appendChild(backLink("#/", "Home"));
+    app.appendChild(el("h1", null, "Settings"));
+    app.appendChild(el("p", "lead", "These stay on this device. Turn on Edit mode to change chapter videos and solution links."));
+
+    var editCard = el("section", "set-card feature");
+    var editRow = el("div", "set-row");
+    var editTxt = el("div", "set-copy");
+    editTxt.appendChild(el("b", null, "Edit mode"));
+    editTxt.appendChild(el("span", null, "On any book, tap Video or Solve and paste a YouTube or solutions URL."));
+    editRow.appendChild(editTxt);
+    var tog = el("button", "toggle");
+    tog.type = "button";
+    tog.setAttribute("role", "switch");
+    tog.setAttribute("aria-checked", String(editMode));
+    tog.setAttribute("aria-label", "Edit mode");
+    tog.addEventListener("click", function () { setEditMode(!editMode); route(); });
+    editRow.appendChild(tog);
+    editCard.appendChild(editRow);
+    if (editMode) {
+      var go = el("p", "set-hint");
+      go.appendChild(document.createTextNode("Open a book to start. An outline on Video or Solve means you changed that link. "));
+      go.appendChild(internal("#/books", null, "Browse books"));
+      editCard.appendChild(go);
+    }
+    app.appendChild(editCard);
+
+    var look = el("section", "set-card");
+    look.appendChild(el("h2", null, "Appearance"));
+    var themeRow = el("div", "set-row");
+    var themeTxt = el("div", "set-copy");
+    themeTxt.appendChild(el("b", null, "Dark mode"));
+    themeTxt.appendChild(el("span", null, "Or use the sun and moon button in the header."));
+    themeRow.appendChild(themeTxt);
+    var themeTog = el("button", "toggle");
+    themeTog.type = "button";
+    themeTog.setAttribute("role", "switch");
+    var isDark = document.documentElement.dataset.theme === "dark";
+    themeTog.setAttribute("aria-checked", String(isDark));
+    themeTog.setAttribute("aria-label", "Dark mode");
+    themeTog.addEventListener("click", function () {
+      document.getElementById("themeBtn").click();
+      themeTog.setAttribute("aria-checked", String(document.documentElement.dataset.theme === "dark"));
+    });
+    themeRow.appendChild(themeTog);
+    look.appendChild(themeRow);
+    app.appendChild(look);
+
+    var n = editCount();
+    var changes = el("section", "set-card");
+    changes.appendChild(el("h2", null, n ? n + " change" + (n === 1 ? "" : "s") + " on this device" : "Your changes"));
+    if (!n) {
+      changes.appendChild(el("p", "set-hint", "Nothing changed yet. Turn on Edit mode, open a book, and tap a chapter’s Video or Solve button."));
+    } else {
+      var list = el("div", "set-edits");
+      ["v", "s"].forEach(function (kind) {
+        Object.keys(edits[kind] || {}).sort().forEach(function (id) {
+          var b = BY_ID[id];
+          if (!b) return;
+          Object.keys(edits[kind][id]).forEach(function (ix) {
+            var i = +ix;
+            var ch = b.ch[i];
+            var row = el("div", "set-edit");
+            var txt = el("div", "set-copy");
+            txt.appendChild(el("b", null, b.t + " · " + (ch ? chapterTitle(ch[0]) : "Chapter " + (i + 1))));
+            var val = edits[kind][id][ix];
+            txt.appendChild(el("span", null, kind === "v"
+              ? (val ? "Video " + val : "Video hidden")
+              : (val ? "Solutions link" : "Solutions hidden")));
+            row.appendChild(txt);
+            var acts = el("div", "set-mini");
+            if (val) {
+              var open = ext(kind === "v" ? "https://www.youtube.com/watch?v=" + val : solHref(b, val), "set-mini-btn", "Open");
+              acts.appendChild(open);
+            }
+            var book = internal(bookHref(b), "set-mini-btn", "Book");
+            acts.appendChild(book);
+            var drop = el("button", "set-mini-btn", "Remove");
+            drop.type = "button";
+            drop.addEventListener("click", function () {
+              setOverride(kind, b, i, null);
+              route();
+            });
+            acts.appendChild(drop);
+            row.appendChild(acts);
+            list.appendChild(row);
+          });
+        });
+      });
+      changes.appendChild(list);
+    }
+    app.appendChild(changes);
+
+    var io = el("section", "set-card");
+    io.appendChild(el("h2", null, "Copy or restore"));
+    io.appendChild(el("p", "set-hint", "Changes live only in this browser. Copy them if you want a backup, or paste a backup back in."));
+    var ioActs = el("div", "set-sheet-acts");
+    var copy = el("button", "btn", "Copy changes");
+    copy.type = "button";
+    copy.disabled = !n;
+    copy.addEventListener("click", function () {
+      var text = JSON.stringify({ v: edits.v, s: edits.s });
+      function ok() { copy.textContent = "Copied"; setTimeout(function () { copy.textContent = "Copy changes"; }, 1600); }
+      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(ok, function () { window.prompt("Copy this", text); });
+      else window.prompt("Copy this", text);
+    });
+    ioActs.appendChild(copy);
+    var apply = el("button", "btn", "Paste backup");
+    apply.type = "button";
+    apply.addEventListener("click", function () {
+      var raw = window.prompt("Paste a copied backup");
+      if (raw == null || !String(raw).trim()) return;
+      try {
+        var data = JSON.parse(raw);
+        if (!data || typeof data !== "object") throw new Error("bad");
+        edits.v = data.v && typeof data.v === "object" ? data.v : {};
+        edits.s = data.s && typeof data.s === "object" ? data.s : {};
+        save("ncert-edits", edits);
+        route();
+      } catch (err) {
+        window.alert("That backup could not be read.");
+      }
+    });
+    ioActs.appendChild(apply);
+    if (n) {
+      var wipe = el("button", "btn danger", "Clear all changes");
+      wipe.type = "button";
+      var armed = false;
+      wipe.addEventListener("click", function () {
+        if (!armed) { armed = true; wipe.textContent = "Tap again to clear"; return; }
+        edits = { v: {}, s: {} };
+        save("ncert-edits", edits);
+        route();
+      });
+      ioActs.appendChild(wipe);
+    }
+    io.appendChild(ioActs);
+    app.appendChild(io);
+    app.appendChild(el("p", "source", "Your edits never change the published site for other people. Physics Wallah and Tiwari Academy are independent of NCERT."));
+  }
+
+  var editTarget = null;
+  function openEdit(b, i) {
+    editTarget = { b: b, i: i };
+    var sheet = document.getElementById("editSheet");
+    var name = b.ch[i] ? chapterTitle(b.ch[i][0]) : "Chapter " + (i + 1);
+    document.getElementById("editSheetTitle").textContent = name;
+    document.getElementById("editSheetHint").textContent = b.t + " · Class " + b.c + " · " + b.s;
+    var vid = chapterVideo(b, i);
+    document.getElementById("editVid").value = vid ? "https://www.youtube.com/watch?v=" + vid : "";
+    document.getElementById("editVidErr").hidden = true;
+    var sol = chapterSolPath(b, i);
+    document.getElementById("editSol").value = solHref(b, sol) || sol;
+    if (sheet.showModal) sheet.showModal(); else sheet.setAttribute("open", "");
+    document.getElementById("editVid").focus();
+  }
+  function closeEdit() {
+    var sheet = document.getElementById("editSheet");
+    if (sheet.open && sheet.close) sheet.close();
+    else sheet.removeAttribute("open");
+    editTarget = null;
+  }
+
   function viewMore() {
     app.appendChild(backLink("#/", "Home"));
+    var set = internal("#/settings", "home-link");
+    set.style.margin = "0 0 16px";
+    set.appendChild(icon("gear"));
+    set.appendChild(el("span", null, "Settings" + (editMode ? " · edit mode on" : "")));
+    set.appendChild(icon("chev", "chev"));
+    app.appendChild(set);
     app.appendChild(el("h1", null, "Papers & resources"));
     app.appendChild(el("p", "lead", "Sample papers and official documents that go with the textbooks."));
     app.appendChild(el("h2", null, "Papers"));
@@ -1361,6 +1608,7 @@
     else if (parts[0] === "upsc") { name = "upsc"; viewUpsc(); }
     else if (parts[0] === "roadmap") { name = "roadmap"; viewRoadmap(); }
     else if (parts[0] === "more") { name = "more"; viewMore(); }
+    else if (parts[0] === "settings") { name = "settings"; viewSettings(); }
     else if (parts[0] === "search" && parts.slice(1).join("/").trim()) {
       name = "search";
       var query = parts.slice(1).join("/").trim();
@@ -1372,6 +1620,13 @@
     [].forEach.call(document.querySelectorAll("[data-route]"), function (a) {
       if (a.dataset.route === name) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current");
     });
+    var setBtn = document.getElementById("settingsBtn");
+    if (setBtn) {
+      if (name === "settings") setBtn.setAttribute("aria-current", "page");
+      else setBtn.removeAttribute("aria-current");
+    }
+    var bar = document.getElementById("editBar");
+    if (bar) bar.hidden = !editMode;
     if (name !== "search") searchInput.value = "";
     window.scrollTo(0, 0);
   }
@@ -1397,6 +1652,38 @@
   [].forEach.call(document.querySelectorAll("[data-icon]"), function (n) {
     n.textContent = "";
     n.appendChild(icon(n.dataset.icon));
+  });
+  var settingsBtn = document.getElementById("settingsBtn");
+  settingsBtn.appendChild(icon("gear"));
+  document.getElementById("editSheetX").addEventListener("click", closeEdit);
+  document.getElementById("editSheet").addEventListener("close", function () { editTarget = null; });
+  document.getElementById("editSheet").addEventListener("click", function (e) {
+    if (e.target === this) closeEdit();
+  });
+  document.getElementById("editSave").addEventListener("click", function () {
+    if (!editTarget) return;
+    var raw = document.getElementById("editVid").value;
+    var id = String(raw || "").trim() ? ytId(raw) : "";
+    if (String(raw || "").trim() && !id) {
+      document.getElementById("editVidErr").hidden = false;
+      return;
+    }
+    document.getElementById("editVidErr").hidden = true;
+    var stockV = stockVideo(editTarget.b, editTarget.i);
+    setOverride("v", editTarget.b, editTarget.i, id === stockV ? null : id);
+    var solRaw = parseSolPath(document.getElementById("editSol").value);
+    var stockS = stockSol(editTarget.b, editTarget.i);
+    var sameSol = solRaw === stockS || solHref(editTarget.b, solRaw) === solHref(editTarget.b, stockS);
+    setOverride("s", editTarget.b, editTarget.i, sameSol ? null : solRaw);
+    closeEdit();
+    route();
+  });
+  document.getElementById("editReset").addEventListener("click", function () {
+    if (!editTarget) return;
+    setOverride("v", editTarget.b, editTarget.i, null);
+    setOverride("s", editTarget.b, editTarget.i, null);
+    closeEdit();
+    route();
   });
   var themeBtn = document.getElementById("themeBtn");
   function applyTheme(t) {
