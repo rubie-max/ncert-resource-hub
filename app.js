@@ -52,7 +52,11 @@
     activity: '<path d="M22 12h-4l-3 9L9 3l-3 9H2"/>',
     monitor: '<rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8"/><path d="M12 17v4"/>',
     users: '<circle cx="9" cy="7" r="4"/><path d="M2 21v-2a4 4 0 0 1 4-4h6a4 4 0 0 1 4 4v2"/><path d="M16 3.1a4 4 0 0 1 0 7.8"/><path d="M22 21v-2a4 4 0 0 0-3-3.9"/>',
-    pen: '<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>'
+    pen: '<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>',
+    map: '<path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3z"/><path d="M9 3v15"/><path d="M15 6v15"/>',
+    flag: '<path d="M4 22V4"/><path d="M4 4h13l-2 4 2 4H4"/>',
+    pin: '<path d="M12 22s7-6.2 7-12a7 7 0 0 0-14 0c0 5.8 7 12 7 12z"/><circle cx="12" cy="10" r="2.5"/>',
+    out: '<path d="M14 3h7v7"/><path d="M10 14 21 3"/><path d="M21 14v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5"/>'
   };
   var SUBJECT_ICON = {
     "Mathematics": "sigma", "Science": "flask", "Chemistry": "flask", "Physics": "atom", "Biology": "leaf", "Biotechnology": "leaf",
@@ -77,6 +81,96 @@
     { lang: "Hindi", k: "आधुनिक", c: "#4f46e5", t: "आधुनिक भारत", d: "Modern India by Bipan Chandra.", ids: ["classic-6"] }
   ];
 
+
+  var METHOD = [
+    ["Read", "Read the chapter once fully, then again with a pencil."],
+    ["Ask", "Answer the in-text questions before looking anything up."],
+    ["Practise", "Do every exercise yourself, then check with Solutions."],
+    ["Watch", "Stuck? Play the chapter video, then retry the question."],
+    ["Stretch", "Exemplar questions for depth, from Class 6 onwards."],
+    ["Revise", "Short notes per chapter; revise weekly, test monthly."]
+  ];
+  var ROADMAP = [
+    { k: "Foundational", c: "#059669", icon: "leaf", cls: [1, 2], age: "Ages 6–8",
+      goal: "Read, speak and count with confidence, through play.",
+      focus: ["Read aloud every day from the language book; one short story a day is enough.",
+        "Count, add and subtract with real objects. Joyful Mathematics is built around games.",
+        "Songs, drawing and outdoor play are part of learning. No exams, no tuition pressure.",
+        "20–30 minutes of reading together with a parent builds the habit for life."],
+      milestone: "NIPUN Bharat aims for every child to read with understanding and do basic maths by the end of Class 3.",
+      notes: { 1: "Sounds, letters and first words; counting and comparing small numbers.",
+        2: "Reading short stories alone; adding, subtracting, shapes and patterns." } },
+    { k: "Preparatory", c: "#0284c7", icon: "globe", cls: [3, 4, 5], age: "Ages 8–11",
+      goal: "Turn reading into learning.",
+      focus: ["The World Around Us introduces science and social science together. Ask why, then look it up.",
+        "Maths Mela covers place value, the four operations, fractions, shapes and measurement. Practise a little daily.",
+        "A third language usually starts here under NEP 2020.",
+        "Arts (Bansuri) and Khel Yoga are real subjects, not extras.",
+        "Write a few lines every day: a diary, a letter or short answers."],
+      milestone: "By Class 5: reading a chapter alone, comfortable with tables, long division and simple fractions.",
+      notes: { 3: "Family, plants, animals and water; numbers up to thousands.",
+        4: "Longer reading and writing; multiplication, division and fractions.",
+        5: "Reading to learn; decimals, measurement, maps and the wider world." } },
+    { k: "Middle", c: "#d97706", icon: "flask", cls: [6, 7, 8], age: "Ages 11–14",
+      goal: "Subjects open up: Science, Social Science and real mathematics.",
+      focus: ["Read every chapter fully and do the exercises yourself before opening Solutions.",
+        "Ganita Prakash: integers, fractions, algebra and geometry. Classes 9–12 build on all of it.",
+        "Curiosity (Science): do the activities and keep a notebook of what you observed.",
+        "Social Science: draw timelines and maps instead of memorising lines.",
+        "Kaushal Bodh adds hands-on projects. Olympiads and the NMMS scholarship (Class 8) are good stretch goals."],
+      milestone: "By Class 8: strong in fractions, algebra and reading comprehension. Class 9 assumes them.",
+      notes: { 6: "Science, Social Science and Ganita Prakash begin. Build the exercise habit.",
+        7: "Integers, algebra, acids and electricity, and the rise of early empires.",
+        8: "Squares, cubes and proportion; forces, light and matter; Parliament and the economy." } },
+    { k: "Secondary", c: "#e11d48", icon: "clipboard", cls: [9, 10], age: "Ages 14–16",
+      goal: "Your first board exam.",
+      focus: ["Class 9 is the base of Class 10 and 11. Number systems, motion, atoms and cells all come back.",
+        "NCERT first: board questions come from the textbook. Finish every exercise, then Exemplar.",
+        "Use sample papers through the year. In the last three months, solve past papers against the clock.",
+        "Pick Standard Maths in Class 10 if you might take Maths in Class 11.",
+        "Choose your stream by interest, not only by marks. Read the stream guide below before deciding."],
+      milestone: "Class 10 CBSE board exam in February, with an optional second attempt in May to improve scores.",
+      notes: { 9: "New Ganita Manjari and Exploration books; the base for Classes 10 and 11.",
+        10: "Board year: finish NCERT twice, then Exemplar and past papers." } },
+    { k: "Senior secondary", c: "#7c3aed", icon: "atom", cls: [11, 12], age: "Ages 16–18",
+      goal: "Pick a stream, then prepare for boards and entrance exams together.",
+      focus: ["Class 11 is half the JEE, NEET and CUET syllabus. It is not a break year.",
+        "Make short notes for every chapter and revise them weekly.",
+        "NEET and JEE Chemistry ask lines straight from NCERT. Read those books word by word.",
+        "Practise in order: exercises, Exemplar, past board papers, then full mock tests.",
+        "Most entrance registrations open between October and March of Class 12. Check the official sites early."],
+      milestone: "Class 12 board exam in February–March; entrance exams run from January to June.",
+      notes: { 11: "Stream subjects begin; a large part of every entrance syllabus is here.",
+        12: "Boards plus entrance exams. Keep revising Class 11 alongside." } }
+  ];
+  var STREAMS = [
+    { t: "Science · PCM", c: "#0284c7", s: ["Physics", "Chemistry", "Mathematics", "Computer Science"],
+      to: "Engineering (JEE), architecture, B.Sc., defence (NDA), computer science" },
+    { t: "Science · PCB", c: "#16a34a", s: ["Physics", "Chemistry", "Biology", "Biotechnology"],
+      to: "Medicine and dentistry (NEET), nursing, pharmacy, B.Sc. life sciences" },
+    { t: "Commerce", c: "#4f46e5", s: ["Accountancy", "Business Studies", "Economics", "Mathematics"],
+      to: "CA, CS, CMA, B.Com, BBA, economics" },
+    { t: "Humanities", c: "#b45309", s: ["History", "Political Science", "Geography", "Economics", "Psychology", "Sociology"],
+      to: "Law (CLAT), BA, journalism, design, teaching, civil services later" }
+  ];
+  var EXAMS = [
+    { t: "JEE Main & Advanced", d: "Engineering at NITs, IIITs and IITs.", read: "Physics, Chemistry and Maths, Classes 11–12. NCERT Chemistry is essential for inorganic.",
+      links: [["NTA", "https://nta.ac.in/"], ["JEE Advanced", "https://jeeadv.ac.in/"]] },
+    { t: "NEET-UG", d: "MBBS, BDS, AYUSH and nursing.", read: "Biology 11–12 almost line by line, plus Physics and Chemistry 11–12.",
+      links: [["NTA", "https://nta.ac.in/"]] },
+    { t: "CUET-UG", d: "Admission to central, state and many private universities.", read: "Domain papers follow your Class 12 NCERT books.",
+      links: [["NTA", "https://nta.ac.in/"]] },
+    { t: "NDA", d: "Army, Navy and Air Force officer training, straight after Class 12.", read: "Maths 11–12; general ability uses Science and Social Science from Classes 6–12.",
+      links: [["UPSC", "https://upsc.gov.in/"]] },
+    { t: "CLAT", d: "Five-year law degrees at National Law Universities.", read: "Reading, reasoning and current affairs. Political Science 11–12 helps with legal basics.",
+      links: [["Consortium of NLUs", "https://consortiumofnlus.ac.in/"]] },
+    { t: "CA Foundation", d: "First step to Chartered Accountancy, after Class 12.", read: "Accountancy, Business Studies and Economics, Classes 11–12.",
+      links: [["ICAI", "https://www.icai.org/"]] },
+    { t: "UPSC Civil Services", d: "IAS, IPS, IFS and more, after graduation.", read: "History, Geography, Polity, Economics and Science from Classes 6–12, then the old NCERT classics.",
+      internal: ["UPSC shelf", "#/upsc"], links: [["UPSC", "https://upsc.gov.in/"]] },
+    { t: "SSC & state exams", d: "Central and state government jobs, after Class 12 or graduation.", read: "Class 6–10 Maths, Science and Social Science cover most of the general sections.",
+      links: [["SSC", "https://ssc.gov.in/"]] }
+  ];
 
   var PRACTICE = [
     { t: "CBSE Sample Papers", d: "Official sample question papers and marking schemes for Classes 10 and 12.",
@@ -442,6 +536,15 @@
     });
     app.appendChild(grid);
     if (last) app.appendChild(continueCard(last));
+    var road = internal("#/roadmap", "promo");
+    road.style.setProperty("--c", "#0d9488");
+    road.appendChild(icon("map", "promo-ic"));
+    var rt = el("span", "promo-txt");
+    rt.appendChild(el("b", null, "Class 1–12 roadmap"));
+    rt.appendChild(el("span", null, "What to study at each stage, streams and exams after school"));
+    road.appendChild(rt);
+    road.appendChild(icon("chev", "chev"));
+    app.appendChild(road);
     var stats = el("div", "stats");
     [[String(BOOKS.length), "books"], [String(mediumsOf(BOOKS).length), "languages"], ["1–12", "classes"]].forEach(function (x) {
       var s = el("div", "stat");
@@ -981,6 +1084,213 @@
     app.appendChild(old);
   }
 
+  /* ---------- roadmap ---------- */
+  function roadmapBooks(c, m, subject) {
+    var pick = function (lang) {
+      return inGroup(c, "current").filter(function (b) {
+        return b.m === lang && (subject ? b.s === subject : b.s !== "Vocational");
+      });
+    };
+    var list = pick(m);
+    return list.length ? list : pick("English");
+  }
+  function roadmapClass(c, note, m, mine) {
+    var row = el("article", "rm-class" + (c === mine ? " mine" : ""));
+    row.id = "rm-class-" + c;
+    var head = el("div", "rm-class-head");
+    var num = el("span", "rm-num");
+    num.appendChild(el("small", null, "Class"));
+    num.appendChild(el("b", null, String(c)));
+    head.appendChild(num);
+    var txt = el("div", "rm-class-txt");
+    if (c === mine) {
+      var here = el("span", "rm-here");
+      here.appendChild(icon("pin"));
+      here.appendChild(document.createTextNode("Your class"));
+      txt.appendChild(here);
+    }
+    txt.appendChild(el("p", null, note));
+    head.appendChild(txt);
+    row.appendChild(head);
+    if (c < 11) {
+      var shelf = el("div", "rm-books");
+      roadmapBooks(c, m).forEach(function (b) {
+        var a = internal(bookHref(b), "rm-book");
+        a.appendChild(spine(b));
+        var t = el("span", null);
+        t.appendChild(el("b", null, b.t));
+        if (b.t !== b.s) t.appendChild(el("small", null, b.s));
+        a.appendChild(t);
+        shelf.appendChild(a);
+      });
+      if (shelf.children.length) row.appendChild(shelf);
+    }
+    var acts = el("div", "rm-acts");
+    acts.appendChild(internal(tabHref(c), "rm-act primary", "All Class " + c + " books"));
+    if (solutionBooks(c).length) acts.appendChild(internal("#/solutions/" + c, "rm-act", "Solutions"));
+    if (inGroup(c, "practice").length) acts.appendChild(internal("#/exemplar/" + c, "rm-act", "Exemplar"));
+    row.appendChild(acts);
+    return row;
+  }
+  function roadmapStreams(m) {
+    var box = el("div", "rm-streams");
+    box.appendChild(el("h3", "rm-sub", "Choosing a stream"));
+    var grid = el("div", "rm-stream-grid");
+    STREAMS.forEach(function (st) {
+      var card = el("article", "rm-stream");
+      card.style.setProperty("--c", st.c);
+      card.appendChild(el("b", null, st.t));
+      var subs = el("div", "rm-stream-subs");
+      st.s.forEach(function (s) {
+        [11, 12].forEach(function (c) {
+          var b = roadmapBooks(c, m, s)[0];
+          if (b) subs.appendChild(internal(bookHref(b), "rm-chip", s + " " + c));
+        });
+      });
+      card.appendChild(subs);
+      var to = el("p", null);
+      to.appendChild(el("span", null, "Leads to "));
+      to.appendChild(document.createTextNode(st.to));
+      card.appendChild(to);
+      grid.appendChild(card);
+    });
+    box.appendChild(grid);
+    return box;
+  }
+  function roadmapExams() {
+    var sec = el("section", "rm-stage");
+    sec.id = "rm-after";
+    sec.style.setProperty("--c", "#0f766e");
+    var head = el("div", "rm-stage-head");
+    head.appendChild(icon("flag", "rm-stage-ic"));
+    var ht = el("div");
+    ht.appendChild(el("span", "rm-stage-meta", "After Class 12"));
+    ht.appendChild(el("h2", null, "Entrance exams and careers"));
+    ht.appendChild(el("p", null, "Most of these are built on the same NCERT books. Dates and rules change every year, so confirm them on the official sites."));
+    head.appendChild(ht);
+    sec.appendChild(head);
+    var grid = el("div", "rm-exams");
+    EXAMS.forEach(function (x) {
+      var card = el("article", "rm-exam");
+      card.appendChild(el("h3", null, x.t));
+      card.appendChild(el("p", null, x.d));
+      var read = el("p", "rm-read");
+      read.appendChild(el("b", null, "NCERT to read: "));
+      read.appendChild(document.createTextNode(x.read));
+      card.appendChild(read);
+      var acts = el("div", "rm-acts");
+      if (x.internal) acts.appendChild(internal(x.internal[1], "rm-act primary", x.internal[0]));
+      x.links.forEach(function (l) {
+        var a = ext(l[1], "rm-act");
+        a.appendChild(document.createTextNode(l[0]));
+        a.appendChild(icon("out"));
+        acts.appendChild(a);
+      });
+      card.appendChild(acts);
+      grid.appendChild(card);
+    });
+    sec.appendChild(grid);
+    return sec;
+  }
+
+  function viewRoadmap() {
+    var m = filters.m === "Hindi" ? "Hindi" : "English";
+    var mine = load("ncert-class", null);
+    app.appendChild(backLink("#/", "Home"));
+
+    var hero = el("section", "uhero rm-hero");
+    hero.style.setProperty("--c", "#0d9488");
+    hero.appendChild(icon("map", "uhero-bg"));
+    hero.appendChild(el("span", "uhero-kicker", "Roadmap"));
+    hero.appendChild(el("h1", null, "Class 1 to your career"));
+    hero.appendChild(el("p", null, "What to focus on at every stage, the NCERT books for each class, and the exams that come after school."));
+    var seg = el("div", "uhero-seg");
+    seg.setAttribute("role", "group");
+    seg.setAttribute("aria-label", "Book language");
+    [["English", "English"], ["Hindi", "हिंदी"]].forEach(function (l) {
+      var b = el("button", null, l[1]);
+      b.type = "button";
+      b.setAttribute("aria-pressed", String(m === l[0]));
+      b.addEventListener("click", function () {
+        filters.m = l[0];
+        save("ncert-lang", l[0]);
+        var y = window.scrollY;
+        route();
+        window.scrollTo(0, y);
+      });
+      seg.appendChild(b);
+    });
+    hero.appendChild(seg);
+    app.appendChild(hero);
+
+    var jump = el("nav", "uera-tabs rm-jump");
+    jump.setAttribute("aria-label", "Jump to stage");
+    ROADMAP.concat([{ k: "After 12", c: "#0f766e", id: "rm-after" }]).forEach(function (st, i) {
+      var t = el("button", "uera-tab");
+      t.type = "button";
+      t.style.setProperty("--c", st.c);
+      t.appendChild(el("span", "n", String(i + 1)));
+      t.appendChild(document.createTextNode(st.k));
+      t.addEventListener("click", function () {
+        var target = document.getElementById(st.id || "rm-stage-" + i);
+        if (target) target.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+      jump.appendChild(t);
+    });
+    app.appendChild(jump);
+
+    var method = el("section", "rm-method");
+    method.appendChild(el("h2", null, "How to study any chapter"));
+    var steps = el("ol", null);
+    METHOD.forEach(function (s) {
+      var li = el("li", null);
+      li.appendChild(el("b", null, s[0]));
+      li.appendChild(el("span", null, s[1]));
+      steps.appendChild(li);
+    });
+    method.appendChild(steps);
+    app.appendChild(method);
+
+    var road = el("div", "rm-road");
+    ROADMAP.forEach(function (st, i) {
+      var sec = el("section", "rm-stage");
+      sec.id = "rm-stage-" + i;
+      sec.style.setProperty("--c", st.c);
+      var head = el("div", "rm-stage-head");
+      head.appendChild(icon(st.icon, "rm-stage-ic"));
+      var ht = el("div");
+      ht.appendChild(el("span", "rm-stage-meta", "Stage " + (i + 1) + " · Classes " + st.cls[0] + "–" + st.cls[st.cls.length - 1] + " · " + st.age));
+      ht.appendChild(el("h2", null, st.k));
+      ht.appendChild(el("p", null, st.goal));
+      head.appendChild(ht);
+      sec.appendChild(head);
+
+      var guide = el("div", "rm-guide");
+      var focus = el("ul", "rm-focus");
+      st.focus.forEach(function (f) {
+        var li = el("li", null);
+        li.appendChild(icon("check"));
+        li.appendChild(el("span", null, f));
+        focus.appendChild(li);
+      });
+      guide.appendChild(focus);
+      var ms = el("p", "rm-milestone");
+      ms.appendChild(icon("flag"));
+      ms.appendChild(el("span", null, st.milestone));
+      guide.appendChild(ms);
+      sec.appendChild(guide);
+
+      if (st.cls[0] === 11) sec.appendChild(roadmapStreams(m));
+      var list = el("div", "rm-classes");
+      st.cls.forEach(function (c) { list.appendChild(roadmapClass(c, st.notes[c], m, mine)); });
+      sec.appendChild(list);
+      road.appendChild(sec);
+    });
+    road.appendChild(roadmapExams());
+    app.appendChild(road);
+    app.appendChild(el("p", "source", "This roadmap is general guidance based on NEP 2020 stages and the CBSE pattern. State boards and exam rules differ; always confirm dates on official websites. Physics Wallah and Tiwari Academy are independent of NCERT."));
+  }
+
   function cards(items) {
     var wrap = el("div", "cards");
     items.forEach(function (it) {
@@ -1049,6 +1359,7 @@
       viewBook(parts.slice(1).join("/"));
     }
     else if (parts[0] === "upsc") { name = "upsc"; viewUpsc(); }
+    else if (parts[0] === "roadmap") { name = "roadmap"; viewRoadmap(); }
     else if (parts[0] === "more") { name = "more"; viewMore(); }
     else if (parts[0] === "search" && parts.slice(1).join("/").trim()) {
       name = "search";
