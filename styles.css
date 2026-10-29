@@ -92,6 +92,15 @@ a { color: inherit; }
 }
 .theme-btn:hover { border-color: var(--accent); color: var(--accent); }
 .theme-btn:active { transform: rotate(-20deg) scale(0.94); }
+a.theme-btn { text-decoration: none; }
+a.theme-btn:active { transform: scale(0.94); }
+a.theme-btn[aria-current="page"] { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
+.edit-bar {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 0 0 10px; font-size: 13px; font-weight: 650; color: var(--accent);
+}
+.edit-bar[hidden] { display: none; }
+.edit-bar a { flex: none; color: inherit; }
 .brand-text strong { display: block; font-size: 16px; font-weight: 800; letter-spacing: -0.01em; line-height: 1.15; }
 .brand-text small { display: block; font-size: 12px; color: var(--muted); }
 .search { flex: 1; min-width: 0; }
@@ -545,6 +554,53 @@ h2 { font-size: 19px; font-weight: 800; letter-spacing: -0.015em; line-height: 1
 .pill-btn.vid { color: var(--yt); background: var(--yt-soft); }
 .pill-btn.vid .ic { color: var(--yt); }
 .btn.vid { background: var(--yt-soft); border-color: transparent; color: var(--yt); }
+.pill-btn.custom { box-shadow: inset 0 0 0 1.5px currentColor; }
+.pill-btn.add { opacity: 0.72; }
+
+/* Settings */
+.set-card {
+  display: grid; gap: 12px; padding: 16px; margin: 0 0 12px;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 20px;
+}
+.set-card.feature { border-color: color-mix(in srgb, var(--accent) 35%, var(--line)); }
+.set-card h2 { margin: 0; font-size: 16px; }
+.set-row { display: flex; align-items: center; gap: 14px; }
+.set-copy { flex: 1; min-width: 0; display: grid; gap: 2px; }
+.set-copy b { font-size: 15.5px; font-weight: 800; letter-spacing: -0.01em; }
+.set-copy span { font-size: 13px; color: var(--muted); line-height: 1.4; }
+.set-hint { margin: 0; font-size: 13.5px; color: var(--muted); }
+.set-hint a { color: var(--accent); font-weight: 700; }
+.toggle {
+  flex: none; width: 52px; height: 32px; padding: 0; border: 0; border-radius: 999px;
+  background: var(--line); cursor: pointer; position: relative;
+}
+.toggle::after {
+  content: ""; position: absolute; top: 4px; left: 4px; width: 24px; height: 24px;
+  border-radius: 50%; background: var(--surface); transition: left 0.15s;
+}
+.toggle[aria-checked="true"] { background: var(--accent); }
+.toggle[aria-checked="true"]::after { left: 24px; }
+.set-edits { display: grid; gap: 8px; }
+.set-edit {
+  display: flex; align-items: center; gap: 12px; padding: 10px 12px;
+  background: var(--bg); border: 1px solid var(--line); border-radius: 14px;
+}
+.set-mini { flex: none; display: flex; flex-wrap: wrap; gap: 6px; }
+.set-mini-btn {
+  display: inline-flex; align-items: center; min-height: 32px; padding: 0 10px; border-radius: 10px;
+  font: inherit; font-size: 12.5px; font-weight: 700; color: var(--ink); text-decoration: none;
+  background: var(--surface); border: 1px solid var(--line); cursor: pointer;
+}
+.set-field { display: grid; gap: 6px; margin: 0 0 12px; font-size: 13px; font-weight: 700; }
+.set-field input {
+  width: 100%; height: 44px; padding: 0 12px; font: inherit; font-size: 14px; font-weight: 500; color: var(--ink);
+  background: var(--bg); border: 1px solid var(--line); border-radius: 12px; outline: none;
+}
+.set-field input:focus { border-color: var(--accent); }
+.set-err { margin: -6px 0 12px; font-size: 12.5px; font-weight: 650; color: var(--yt); }
+.set-sheet-acts { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
+.btn.danger { color: var(--yt); background: var(--yt-soft); border-color: transparent; }
+.btn:disabled { opacity: 0.5; cursor: default; }
 
 /* UPSC shelf */
 .seg button {
