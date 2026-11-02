@@ -1384,10 +1384,76 @@
     return wrap;
   }
 
+  var installPrompt = null;
+  function isInstalled() {
+    return (window.matchMedia && matchMedia("(display-mode: standalone)").matches) || navigator.standalone === true;
+  }
+  function installCard() {
+    var card = el("section", "set-card");
+    card.id = "set-install";
+    var row = el("div", "set-row");
+    var mark = el("img", "set-app-ic");
+    mark.src = "icon-192.png";
+    mark.alt = "";
+    row.appendChild(mark);
+    var txt = el("div", "set-copy");
+    txt.appendChild(el("b", null, "Install on your home screen"));
+    var ua = navigator.userAgent;
+    var ios = /iPhone|iPad|iPod/.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+    if (isInstalled()) {
+      txt.appendChild(el("span", null, "Installed. You’re using NCERT Library as an app."));
+      row.appendChild(txt);
+      card.appendChild(row);
+      return card;
+    }
+    txt.appendChild(el("span", null, "Opens full screen like an app, and your books list still opens without internet."));
+    row.appendChild(txt);
+    if (installPrompt) {
+      var btn = el("button", "btn primary set-install-btn", "Install");
+      btn.type = "button";
+      btn.addEventListener("click", function () {
+        var p = installPrompt;
+        installPrompt = null;
+        p.prompt();
+        p.userChoice.then(function () { refreshInstallCard(); });
+      });
+      row.appendChild(btn);
+    }
+    card.appendChild(row);
+    if (!installPrompt) {
+      var steps = el("ol", "set-steps");
+      var lines = ios
+        ? ["Open this site in Safari.", "Tap the Share button (square with an arrow).", "Tap “Add to Home Screen”, then Add."]
+        : /Firefox/.test(ua)
+          ? ["Open the browser menu (⋮).", "Tap “Install” or “Add to Home screen”."]
+          : ["Open the browser menu (⋮ at the top right).", "Tap “Install app” or “Add to Home screen”.", "Confirm with Install."];
+      lines.forEach(function (s) { steps.appendChild(el("li", null, s)); });
+      card.appendChild(steps);
+    }
+    return card;
+  }
+  function refreshInstallCard() {
+    var old = document.getElementById("set-install");
+    if (old) old.replaceWith(installCard());
+  }
+  window.addEventListener("beforeinstallprompt", function (e) {
+    e.preventDefault();
+    installPrompt = e;
+    refreshInstallCard();
+  });
+  window.addEventListener("appinstalled", function () {
+    installPrompt = null;
+    refreshInstallCard();
+  });
+  if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost" || location.hostname === "127.0.0.1")) {
+    window.addEventListener("load", function () { navigator.serviceWorker.register("sw.js").catch(function () { /* offline mode unavailable */ }); });
+  }
+
   function viewSettings() {
     app.appendChild(backLink("#/", "Home"));
     app.appendChild(el("h1", null, "Settings"));
     app.appendChild(el("p", "lead", "These stay on this device. Turn on Edit mode to change chapter videos and solution links."));
+    app.appendChild(installCard());
 
     var editCard = el("section", "set-card feature");
     var editRow = el("div", "set-row");
