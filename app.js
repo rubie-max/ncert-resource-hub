@@ -1453,11 +1453,38 @@
     window.addEventListener("load", function () { navigator.serviceWorker.register("sw.js").catch(function () { /* offline mode unavailable */ }); });
   }
 
+  function updateApp(btn, status) {
+    btn.disabled = true;
+    btn.textContent = "Updating…";
+    status.textContent = "Fetching the latest version…";
+    var work = window.caches
+      ? caches.keys().then(function (ks) { return Promise.all(ks.map(function (k) { return caches.delete(k); })); })
+      : Promise.resolve();
+    work.catch(function () {}).then(function () { location.reload(); });
+  }
+  function updateCard() {
+    var card = el("section", "set-card");
+    var row = el("div", "set-row");
+    var txt = el("div", "set-copy");
+    txt.appendChild(el("b", null, "Update the app"));
+    txt.appendChild(el("span", null, "The app keeps a saved copy so it opens offline. Tap to pull the newest version and reload."));
+    row.appendChild(txt);
+    var btn = el("button", "btn set-install-btn", "Update now");
+    btn.type = "button";
+    row.appendChild(btn);
+    card.appendChild(row);
+    var status = el("p", "set-hint");
+    card.appendChild(status);
+    btn.addEventListener("click", function () { updateApp(btn, status); });
+    return card;
+  }
+
   function viewSettings() {
     app.appendChild(backLink("#/", "Home"));
     app.appendChild(el("h1", null, "Settings"));
     app.appendChild(el("p", "lead", "These stay on this device. Turn on Edit mode to change chapter videos and solution links."));
     app.appendChild(installCard());
+    app.appendChild(updateCard());
 
     var editCard = el("section", "set-card feature");
     var editRow = el("div", "set-row");
