@@ -569,6 +569,10 @@ h2 { font-size: 19px; font-weight: 800; letter-spacing: -0.015em; line-height: 1
 .set-copy b { font-size: 15.5px; font-weight: 800; letter-spacing: -0.01em; }
 .set-copy span { font-size: 13px; color: var(--muted); line-height: 1.4; }
 .set-hint { margin: 0; font-size: 13.5px; color: var(--muted); }
+.set-app-ic { flex: none; width: 48px; height: 48px; border-radius: 14px; }
+.set-install-btn { flex: none; min-height: 42px; padding: 8px 18px; font: inherit; font-weight: 700; cursor: pointer; }
+.set-steps { margin: 0; padding: 0 0 0 20px; display: grid; gap: 4px; font-size: 13.5px; color: var(--muted); }
+.set-steps li::marker { color: var(--accent); font-weight: 800; }
 .set-hint a { color: var(--accent); font-weight: 700; }
 .toggle {
   flex: none; width: 52px; height: 32px; padding: 0; border: 0; border-radius: 999px;
