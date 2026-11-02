@@ -1,5 +1,5 @@
 /* Lets the site install to the home screen and open offline. Network first, so a publish shows up straight away. */
-var CACHE = "ncert-shell-v1";
+var CACHE = "ncert-shell-v2";
 var SHELL = [
   "./", "index.html", "styles.css", "app.js", "books.js", "pw-videos.js", "logo.svg", "manifest.webmanifest",
   "icon-192.png", "icon-512.png", "fonts/jakarta-latin.woff2", "fonts/jakarta-latin-ext.woff2"
