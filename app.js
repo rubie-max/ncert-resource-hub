@@ -1408,28 +1408,32 @@
     }
     txt.appendChild(el("span", null, "Opens full screen like an app, and your books list still opens without internet."));
     row.appendChild(txt);
-    if (installPrompt) {
-      var btn = el("button", "btn primary set-install-btn", "Install");
-      btn.type = "button";
-      btn.addEventListener("click", function () {
+
+    var steps = el("ol", "set-steps");
+    steps.hidden = true;
+    var lines = ios
+      ? ["Open this site in Safari.", "Tap the Share button (square with an arrow).", "Tap “Add to Home Screen”, then Add."]
+      : /Firefox/.test(ua)
+        ? ["Open the browser menu (⋮).", "Tap “Install” or “Add to Home screen”."]
+        : ["Open the browser menu (⋮ at the top right).", "Tap “Install app” or “Add to Home screen”.", "Confirm with Install."];
+    lines.forEach(function (s) { steps.appendChild(el("li", null, s)); });
+
+    var btn = el("button", "btn primary set-install-btn", "Install");
+    btn.type = "button";
+    btn.addEventListener("click", function () {
+      if (installPrompt) {
         var p = installPrompt;
         installPrompt = null;
         p.prompt();
         p.userChoice.then(function () { refreshInstallCard(); });
-      });
-      row.appendChild(btn);
-    }
+        return;
+      }
+      steps.hidden = false;
+      btn.hidden = true;
+    });
+    row.appendChild(btn);
     card.appendChild(row);
-    if (!installPrompt) {
-      var steps = el("ol", "set-steps");
-      var lines = ios
-        ? ["Open this site in Safari.", "Tap the Share button (square with an arrow).", "Tap “Add to Home Screen”, then Add."]
-        : /Firefox/.test(ua)
-          ? ["Open the browser menu (⋮).", "Tap “Install” or “Add to Home screen”."]
-          : ["Open the browser menu (⋮ at the top right).", "Tap “Install app” or “Add to Home screen”.", "Confirm with Install."];
-      lines.forEach(function (s) { steps.appendChild(el("li", null, s)); });
-      card.appendChild(steps);
-    }
+    card.appendChild(steps);
     return card;
   }
   function refreshInstallCard() {
