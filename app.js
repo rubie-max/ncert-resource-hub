@@ -265,11 +265,27 @@
     if (text != null) n.textContent = text;
     return n;
   }
+  function directPdf(href) {
+    return /\.pdf($|[?#])/i.test(href) || /selfstudys\.com\/sitepdfs\//i.test(href || "");
+  }
   function ext(href, cls, text) {
     var a = el("a", cls, text);
     a.href = href;
     a.target = "_blank";
     a.rel = "noopener noreferrer";
+    if (directPdf(href)) {
+      a.type = "application/pdf";
+      a.addEventListener("click", function (e) {
+        if (document.documentElement.classList.contains("edit-on")) return;
+        if (!/Android/i.test(navigator.userAgent)) return;
+        var standalone = (window.matchMedia && matchMedia("(display-mode: standalone)").matches) || navigator.standalone === true;
+        if (!standalone) return;
+        if (!/^https:\/\//i.test(href)) return;
+        e.preventDefault();
+        var bare = String(href).replace(/^https:\/\//i, "");
+        location.href = "intent://" + bare + "#Intent;scheme=https;type=application/pdf;action=android.intent.action.VIEW;S.browser_fallback_url=" + encodeURIComponent(href) + ";end";
+      });
+    }
     return a;
   }
   function internal(href, cls, text) {
@@ -392,6 +408,7 @@
   function setEditMode(on) {
     editMode = !!on;
     save("ncert-edit", editMode);
+    document.documentElement.classList.toggle("edit-on", editMode);
     var bar = document.getElementById("editBar");
     if (bar) bar.hidden = !editMode;
   }
@@ -979,20 +996,23 @@
         btns.appendChild(pdf);
         var notLesson = prelims || /^(answers?|appendix|glossary|index|bibliography)/i.test(c[0].trim());
         var vid = chapterVideo(b, i);
+        var solPath = chapterSolPath(b, i);
+        var solLink = solHref(b, solPath);
+        var solPdf = !!(solLink && directPdf(solLink));
+        if (editMode && !notLesson && (!vid || !solPath)) li.classList.add("needs");
         if (vid || (editMode && !notLesson)) {
-          var vd = ext(vid ? "https://www.youtube.com/watch?v=" + vid : "#", "pill-btn vid" + (overrideOf("v", b, i) !== null ? " custom" : "") + (vid ? "" : " add"));
+          var vd = ext(vid ? "https://www.youtube.com/watch?v=" + vid : "#", "pill-btn vid" + (overrideOf("v", b, i) !== null ? " custom" : "") + (vid ? " has" : " add"));
           vd.appendChild(icon("video"));
           vd.appendChild(document.createTextNode(vid ? "Video" : "Add"));
-          vd.setAttribute("aria-label", (editMode ? "Edit video for " : "Physics Wallah lesson for ") + c[0]);
+          vd.setAttribute("aria-label", (editMode ? (vid ? "Edit video for " : "Add video for ") : "Physics Wallah lesson for ") + c[0]);
           if (editMode) vd.addEventListener("click", function (e) { e.preventDefault(); openEdit(b, i); });
           btns.appendChild(vd);
         }
-        var solPath = chapterSolPath(b, i);
         if (solPath || (editMode && !notLesson)) {
-          var sv = ext(solHref(b, solPath) || "#", "pill-btn sol" + (overrideOf("s", b, i) !== null ? " custom" : "") + (solPath ? "" : " add"));
-          sv.appendChild(icon("bulb"));
-          sv.appendChild(document.createTextNode(solPath ? "Solve" : "Add"));
-          sv.setAttribute("aria-label", (editMode ? "Edit solutions for " : "Solutions for ") + c[0]);
+          var sv = ext(solLink || "#", "pill-btn sol" + (overrideOf("s", b, i) !== null ? " custom" : "") + (solPath ? " has" : " add") + (solPath && !solPdf ? " web" : ""));
+          sv.appendChild(icon(solPdf ? "file" : "bulb"));
+          sv.appendChild(document.createTextNode(!solPath ? "Add" : (editMode && solPdf ? "PDF" : "Solve")));
+          sv.setAttribute("aria-label", (editMode ? (solPath ? "Edit solutions for " : "Add solutions for ") : "Solutions for ") + c[0]);
           if (editMode) sv.addEventListener("click", function (e) { e.preventDefault(); openEdit(b, i); });
           btns.appendChild(sv);
         }
@@ -1003,7 +1023,7 @@
       sec.appendChild(list);
       sec.appendChild(el("p", "source", "Tap a chapter number to mark it read. Opening a PDF marks it too. Solutions open on Tiwari Academy, an independent site — check them against the textbook." +
         (anyVid ? " Video plays a Physics Wallah lesson on YouTube for that chapter. Physics Wallah is also independent of NCERT." : "") +
-        (editMode ? " Edit mode is on: tap Video or Solve to change the link on this device." : "")));
+        (editMode ? " Edit mode is on. A dashed Add means that chapter has no link yet. A filled button means a link is saved. Solve with an orange ring opens a website, which is where the ads are. A button marked PDF opens in the viewer, same as the textbook." : "")));
       app.appendChild(sec);
       refresh();
     } else if (!b.full) {
@@ -1722,6 +1742,7 @@
       if (name === "settings") setBtn.setAttribute("aria-current", "page");
       else setBtn.removeAttribute("aria-current");
     }
+    document.documentElement.classList.toggle("edit-on", editMode);
     var bar = document.getElementById("editBar");
     if (bar) bar.hidden = !editMode;
     if (name !== "search") searchInput.value = "";
