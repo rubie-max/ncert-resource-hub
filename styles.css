@@ -555,7 +555,13 @@ h2 { font-size: 19px; font-weight: 800; letter-spacing: -0.015em; line-height: 1
 .pill-btn.vid .ic { color: var(--yt); }
 .btn.vid { background: var(--yt-soft); border-color: transparent; color: var(--yt); }
 .pill-btn.custom { box-shadow: inset 0 0 0 1.5px currentColor; }
-.pill-btn.add { opacity: 0.72; }
+.pill-btn.add {
+  opacity: 1; color: var(--muted); background: transparent;
+  border: 1.5px dashed var(--muted);
+}
+.pill-btn.add .ic { color: var(--muted); }
+.edit-on .ch-row.needs { box-shadow: inset 3px 0 0 var(--warm); }
+.edit-on .pill-btn.web { box-shadow: inset 0 0 0 1.5px var(--warm); }
 
 /* Settings */
 .set-card {
@@ -817,6 +823,7 @@ h2 { font-size: 19px; font-weight: 800; letter-spacing: -0.015em; line-height: 1
   .pill-btn { padding: 0 10px; }
   .pill-btn.vid, .ch-acts:has(.vid):has(.sol) .pill-btn { font-size: 0; gap: 0; width: 40px; justify-content: center; padding: 0; }
   .pill-btn.vid .ic, .ch-acts:has(.vid):has(.sol) .pill-btn .ic { width: 18px; height: 18px; }
+  .pill-btn.add, .ch-acts:has(.vid):has(.sol) .pill-btn.add { font-size: 12px; gap: 4px; width: auto; padding: 0 8px; }
   body { padding-bottom: calc(68px + env(safe-area-inset-bottom)); }
   .bottom-nav {
     display: grid; grid-template-columns: repeat(6, 1fr); position: fixed; left: 0; right: 0; bottom: 0; z-index: 30;
@@ -836,6 +843,7 @@ h2 { font-size: 19px; font-weight: 800; letter-spacing: -0.015em; line-height: 1
 @media (max-width: 380px) {
   .pill-btn { font-size: 0; gap: 0; width: 40px; justify-content: center; padding: 0; }
   .pill-btn .ic { width: 18px; height: 18px; }
+  .pill-btn.add { font-size: 12px; gap: 4px; width: auto; padding: 0 8px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
